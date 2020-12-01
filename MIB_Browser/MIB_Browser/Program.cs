@@ -11,13 +11,9 @@ namespace MIB_Browser
         {
             string input = File.ReadAllText("inp.txt");
             Console.WriteLine(input);
-            Match match = Expressions.objectType.Match(input);
+            Match match = Expressions.fullImports.Match(input);
+            Console.WriteLine(match.Value);
             
-        }
-
-        static string GetNamedGroup(Match match, string name)
-        {
-            foreach(string groupName in match.GetGroup)
         }
     }
 }
