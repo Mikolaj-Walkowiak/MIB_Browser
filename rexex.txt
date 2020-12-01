@@ -1,0 +1,1 @@
+(?<name>\w*)\s*OBJECT-TYPE\s*SYNTAX\s*(?<syntax>.*?)\n\s*(?:ACCESS|MAX-ACCESS)\s*(?<access>.*?)\s*STATUS\s*(?<status>.*)\s*DESCRIPTION\s*"(?<desc>(.*?\n)*?.*?")[^:]*[^{]*[{\s]*(?<type>.*?)\s(?<index>.*?)\s
