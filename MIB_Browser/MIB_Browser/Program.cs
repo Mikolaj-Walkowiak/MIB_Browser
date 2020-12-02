@@ -21,6 +21,11 @@ namespace MIB_Browser
                 {
                     quit = true;
                 }
+                if (command[0] == "start" && command.Length == 1)
+                {
+                    file = new ASPFile("RFC1213-MIB.txt");
+                    node = file.root;
+                }
                 else if (command[0] == "parse" && command.Length == 2)
                 {
                     file = new ASPFile(command[1]);
@@ -99,6 +104,9 @@ namespace MIB_Browser
                 ObjectType objType = (ObjectType)node;
                 Console.WriteLine(node.getName() + "(" + node.getId() + "): OBJECT TYPE");
                 Console.WriteLine("path: " + String.Join('.', getPath(node)));
+                Console.WriteLine("syntax: " + objType.syntax);
+                Console.WriteLine("access: " + objType.access);
+                Console.WriteLine("status: " + objType.status);
                 Console.WriteLine("description: " + objType.description);
                 Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");
             }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class ObjectType : ITreeNode
 {
-	public Syntax syntax;
+	public string syntax;
 	public AccessEnum access;
 	public StatusEnum status;
 	public string description;
