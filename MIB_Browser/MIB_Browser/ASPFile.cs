@@ -182,10 +182,8 @@ public class ASPFile
         objType.name = match.Groups["name"].Value;
         objType.description = match.Groups["desc"].Value;
         objType.syntax = match.Groups["syntax"].Value;
-        Enum.TryParse(match.Groups["access"].Value, out AccessEnum myAccess);
-        objType.access = myAccess;
-        Enum.TryParse(match.Groups["status"].Value, out StatusEnum myStatus);
-        objType.status = myStatus;
+        objType.access = match.Groups["access"].Value;
+        objType.status = match.Groups["status"].Value;
         
         var path = match.Groups["address"].Value.Trim().Split(" ");
         objType.id = Int32.Parse(path[path.Length - 1]);

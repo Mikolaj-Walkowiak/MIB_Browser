@@ -4,8 +4,8 @@ using System.Collections.Generic;
 public class ObjectType : ITreeNode
 {
 	public string syntax;
-	public AccessEnum access;
-	public StatusEnum status;
+	public string access;
+	public string status;
 	public string description;
 
     public int id;
