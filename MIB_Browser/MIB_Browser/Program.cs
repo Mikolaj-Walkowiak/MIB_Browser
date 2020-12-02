@@ -20,12 +20,12 @@ namespace MIB_Browser
                 {
                     quit = true;
                 }
-                if (command[0] == "start" && command.Length == 1)
+                else if (command[0] == "start" && command.Length == 1)
                 {
                     file = new ASPFile("RFC1213-MIB.txt");
                     node = file.root;
                 }
-                if (command[0] == "cls" && command.Length == 1)
+                else if (command[0] == "cls" && command.Length == 1)
                 {
                     Console.Clear();
                 }
