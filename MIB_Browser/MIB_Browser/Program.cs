@@ -17,32 +17,41 @@ namespace MIB_Browser
                 if (node == null) Console.Write(">");
                 else Console.Write(String.Join('.', getPath(node)) + " $ ");
                 string[] command = Console.ReadLine().Split(" ");
-                switch(command[0])
+                if (command[0] == "quit" && command.Length == 1)
                 {
-                    case "quit":
-                        quit = true;
-                        break;
-                    case "parse":
-                        file = new ASPFile(command[1]);
-                        node = file.root;
-                        break;
-                    case "cd":
-                        ITreeNode newNode = file.findPath(command[1].Split('.'), node);
-                        if (newNode != null) node = newNode;
-                        else Console.WriteLine("node not found");
-                        break;
-                    case "ls":
-                        printChildren(node);
-                        break;
-                    case "discard":
-                        file = null;
-                        node = null;
-                        break;
-                    default:
-                        Console.WriteLine("unknown command");
-                        break;
-                    
+                    quit = true;
                 }
+                else if (command[0] == "parse" && command.Length == 2)
+                {
+                    file = new ASPFile(command[1]);
+                    node = file.root;
+                }
+                else if (command[0] == "cd" && command.Length == 2)
+                {
+                    ITreeNode newNode = file.findPath(command[1].Split('.'), node);
+                    if (newNode != null) node = newNode;
+                    else Console.WriteLine("node not found");
+                }
+                else if (command[0] == "ls" && command.Length == 1)
+                {
+                    printChildren(node);
+                }
+                else if (command[0] == "discard" && command.Length == 1)
+                {
+                    file = null;
+                    node = null;
+                }
+                else if (command[0] == "find" && command.Length == 2)
+                {
+                    ITreeNode newNode = file.findNode(command[1]);
+                    if (newNode != null) node = newNode;
+                    else Console.WriteLine("node not found");
+                }
+                else if (command[0] == "info" && command.Length == 1)
+                {
+                    printInfo(node);
+                }
+                else Console.WriteLine("unknown command");
             }
         }
 
@@ -75,6 +84,24 @@ namespace MIB_Browser
         private static string getType(ITreeNode node)
         {
             return node.GetType().ToString();
+        }
+
+        private static void printInfo(ITreeNode node)
+        {
+            if(node.GetType() == typeof(ObjectId))
+            {
+                Console.WriteLine(node.getName() + "(" + node.getId() +  "): OBJECT IDENTIFIER");
+                Console.WriteLine("path: " + String.Join('.', getPath(node)));
+                Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");
+            }
+            else if(node.GetType() == typeof(ObjectType))
+            {
+                ObjectType objType = (ObjectType)node;
+                Console.WriteLine(node.getName() + "(" + node.getId() + "): OBJECT TYPE");
+                Console.WriteLine("path: " + String.Join('.', getPath(node)));
+                Console.WriteLine("description: " + objType.description);
+                Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");
+            }
         }
     }
 }

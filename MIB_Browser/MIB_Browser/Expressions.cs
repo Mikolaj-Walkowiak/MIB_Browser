@@ -10,12 +10,13 @@ public class Expressions
 	public class ObjectType
     {
 		public static Regex tag = new Regex("^" +
-									"(?<name>\\S+) OBJECT-TYPE" +
+									"(?<name>\\S+) OBJECT-TYPE " +
 										"(?:" +
-											" SYNTAX (?<syntax>.+?)|" +
-											" (?:ACCESS|MAX-ACCESS) (?<access>.+?)|" +
-											" STATUS (?<status>.+?)|" +
-											" DESCRIPTION (?<desc>\"[^\"]*\")" +
+											"SYNTAX (?<syntax>.+?) |" +
+											"(?:ACCESS|MAX-ACCESS) (?<access>.+?) |" +
+											"STATUS (?<status>.+?) |" +
+											"DESCRIPTION \"(?<desc>[^\"]*)\" |" +
+											"INDEX {(?<index>[^}]*)} |" +
 										")*" +
 									"::=" + br + "{(?<address>[^}]*)}"
 		, RegexOptions.Singleline);
@@ -24,18 +25,18 @@ public class Expressions
 	public class Imports
     {
 		public static Regex tag = new Regex("^" +
-									"IMPORTS" + br + "(.+?);"
+									"IMPORTS (.+?);"
 		, RegexOptions.Singleline);
 
 		public static Regex singleImport = new Regex(
-										"(.+?)" + br + "FROM" + br + "(.+?);?" + br
+										"(.+?) FROM (.+?);? "
 			, RegexOptions.Singleline);
 	}
 
 	public class ObjectId
     {
 		public static Regex tag = new Regex("^" +
-									"(?<OID>\\S+)" + br + "OBJECT" + br + "IDENTIFIER" + br + "::=" + br + "{(?<address>[^}]*)}"
+									"(?<OID>\\S+) OBJECT IDENTIFIER ::= {(?<address>[^}]*)}"
 		, RegexOptions.Singleline);
 	}
 
