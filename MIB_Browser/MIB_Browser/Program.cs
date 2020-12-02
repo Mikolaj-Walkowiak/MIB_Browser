@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
-
 namespace MIB_Browser
 {
     class Program
@@ -25,6 +24,10 @@ namespace MIB_Browser
                 {
                     file = new ASPFile("RFC1213-MIB.txt");
                     node = file.root;
+                }
+                if (command[0] == "cls" && command.Length == 1)
+                {
+                    Console.Clear();
                 }
                 else if (command[0] == "parse" && command.Length == 2)
                 {
