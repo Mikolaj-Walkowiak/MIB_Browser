@@ -9,6 +9,12 @@ public class Constraint
 		min = Min;
 		max = Max;
 	}
+	public Constraint(Boolean IsSize, string Singular)
+	{
+		isSize = IsSize;
+		min = Singular;
+		max = Singular;
+	}
 
 	public Boolean isSize { get; }
 	public string min { get; }
