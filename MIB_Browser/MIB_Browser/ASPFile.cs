@@ -64,35 +64,25 @@ public class ASPFile
     }
 	private void parseFile(string file)
     {
-        while(file.Length > 0)
+        List<Tuple<Regex, Action<Match>>> tags = new List<Tuple<Regex, Action<Match>>>(new Tuple<Regex, Action<Match>>[]{
+            new Tuple<Regex, Action<Match>>(Expressions.Imports.tag, new Action<Match>(parseImport)),
+            new Tuple<Regex, Action<Match>>(Expressions.ObjectType.tag, new Action<Match>(parseObjectType)),
+            new Tuple<Regex, Action<Match>>(Expressions.ObjectId.tag, new Action<Match>(parseObjectId)),
+
+            new Tuple<Regex, Action<Match>>(Expressions.word, new Action<Match>((Match match) => { })), // fallback
+        });
+        while (file.Length > 0)
         {
-            Match match;
-
-            match = Expressions.Imports.tag.Match(file);
-            if (match.Success)
+            foreach (var tag in tags)
             {
-                parseImport(match);
-                file = file.Substring(match.Length);
-                continue;
+                Match match = tag.Item1.Match(file);
+                if (match.Success)
+                {
+                    tag.Item2(match);
+                    file = file.Substring(match.Length);
+                    break;
+                }
             }
-
-            match = Expressions.ObjectType.tag.Match(file);
-            if (match.Success)
-            {
-                parseObjectType(match);
-                file = file.Substring(match.Length);
-                continue;
-            }
-
-            match = Expressions.ObjectId.tag.Match(file);
-            if (match.Success)
-            {
-                parseObjectId(match);
-                file = file.Substring(match.Length);
-                continue;
-            }
-
-            file = file.Substring(file.IndexOf(' ')+1);
         }
     }
 

@@ -6,6 +6,7 @@ public class Expressions
 {
 	private const string br = " ";
 	public static Regex comment = new Regex(@"--.*\n");
+	public static Regex word = new Regex(@"[^ ]* ");
 
 	public class ObjectType
     {
