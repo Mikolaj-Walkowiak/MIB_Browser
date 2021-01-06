@@ -45,4 +45,13 @@ public class Expressions
     {
 		public static Regex mixed = new Regex("([^(]+)\\(([0-9]+)\\)");
 	}
+
+	public class Types
+    {
+		public static Regex standardTypes = new Regex("(?< name >\\w +) ::=\\s*\\[(?< INBO >[^\\]]+)\\]\\s+(?<type>[\\w\\s]+)\\((?<range>.*?)\\)\\s+");
+		public static Regex sequenceTypes = new Regex("(?<name>\\w+) ::=\\s*(?<seqorchoice>(SEQUENCE|CHOICE))\\s*{(?<content>[^}]+)}");
+		public static Regex syntaxCheck = new Regex("(?<type>\\w+) (?<range>.*?)\\)?\\s*$");
+
+	}
 }
+
