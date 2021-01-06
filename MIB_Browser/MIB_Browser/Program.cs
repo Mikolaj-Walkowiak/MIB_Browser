@@ -25,6 +25,10 @@ namespace MIB_Browser
                     file = new ASPFile("RFC1213-MIB.txt");
                     node = file.root;
                 }
+                else if (command[0] == "test" && command.Length == 1)
+                {
+                    Console.WriteLine(Coder.EncodeToBono("100"));
+                }
                 else if (command[0] == "cls" && command.Length == 1)
                 {
                     Console.Clear();

@@ -39,9 +39,21 @@ var types = new Dictionary<String, int>()
 };
 
 
-public class Coder
+public static class Coder
 {
-    public Boolean CheckConstraints(string type, string value)
+
+    public static string EncodeToBono(string value)
+    {
+        int toEncode = Int32.Parse(value);
+        if (toEncode < 0)
+        {
+            toEncode = ~toEncode;
+            toEncode += 1;
+        }
+        string toRet = string.Format("{0:X}", toEncode);
+        return toRet;
+    }
+    public static Boolean CheckConstraints(string type, string value)
     {
         Constraint toCheck = Types.GetConstraints(type);
         if (toCheck.isSize)
