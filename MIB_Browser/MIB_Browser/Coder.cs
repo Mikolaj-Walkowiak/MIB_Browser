@@ -42,13 +42,31 @@ public static class Coder
 
     public static string EncodeToBono(string value)
     {
-        int toEncode = Int32.Parse(value);
+        long toEncode = Int64.Parse(value);
+        string toRet = "";
         if (toEncode < 0)
         {
+            toEncode = toEncode * -1;
             toEncode = ~toEncode;
             toEncode += 1;
+            toRet = string.Format("{0:X}", toEncode);
+            while (toRet[0] == toRet[1] & toRet[0] == 'F')
+            {
+                toRet = toRet.Remove(0, 2);
+            }
         }
-        string toRet = string.Format("{0:X}", toEncode);
+        else
+        {
+            toRet = string.Format("{0:X}", toEncode);
+            if ("89ABCDEF".Contains(toRet[0]))
+            {
+                toRet = "00" + toRet;
+            }
+            if(toRet.Length % 2 == 1)
+            {
+                toRet = '0' + toRet;
+            }
+        }
         return toRet;
     }
     public static Boolean CheckConstraints(string type, string value)
@@ -56,13 +74,13 @@ public static class Coder
         Constraint toCheck = Types.GetConstraints(type);
         if (toCheck.isSize)
         {
-            if (value.Length < Int32.Parse(toCheck.min) || value.Length > Int32.Parse(toCheck.max))
+            if (value.Length < Int64.Parse(toCheck.min) || value.Length > Int64.Parse(toCheck.max))
             {
                 return false;
             }
         }
         else { 
-            if(Int32.Parse(value) < Int32.Parse(toCheck.min) || Int32.Parse(value) > Int32.Parse(toCheck.max))
+            if(Int64.Parse(value) < Int64.Parse(toCheck.min) || Int64.Parse(value) > Int64.Parse(toCheck.max))
             {
                 return false;
             }

@@ -27,7 +27,7 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "test" && command.Length == 1)
                 {
-                    Console.WriteLine(Coder.EncodeToBono("100"));
+                    Console.WriteLine(Coder.EncodeToBono("-128"));
                 }
                 else if (command[0] == "cls" && command.Length == 1)
                 {
