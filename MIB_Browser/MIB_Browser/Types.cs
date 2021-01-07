@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 public interface IType
 {
@@ -61,7 +62,7 @@ public class IntegerType : IType
         {
             if (classId != null)
             {
-                if (classId == "APLICATION")
+                if (classId == "APPLICATION")
                 {
                     encodedMsg = "01" + "0"; //PC[tmp.parentType];
                 }
@@ -79,7 +80,12 @@ public class IntegerType : IType
             else
             {
                 encodedMsg = "10" + "0";
-                string binary = Utils.LocationHelper(addr);
+                string binary = "";
+                if (addr != null)
+                {
+                    binary = Utils.LocationHelper(addr);
+                    isExplicit = "EXPLICIT";
+                }
                 encodedMsg = encodedMsg + binary;
             }
             if (isExplicit == "EXPLICIT")
@@ -207,7 +213,7 @@ public class StringType : IType
         {
             if (classId != null)
             {
-                if (classId == "APLICATION")
+                if (classId == "APPLICATION")
                 {
                     encodedMsg = "01" + "1"; //PC[tmp.parentType];
                 }
@@ -225,7 +231,12 @@ public class StringType : IType
             else
             {
                 encodedMsg = "10" + "1";
-                string binary = Utils.LocationHelper(addr);
+                string binary = "";
+                if (addr != null)
+                {
+                    binary = Utils.LocationHelper(addr);
+                    isExplicit = "EXPLICIT";
+                }
                 encodedMsg = encodedMsg + binary;
             }
             if (isExplicit == "EXPLICIT")
@@ -274,9 +285,31 @@ public class StringType : IType
 
 public class OIDType : IType
 {
+    public long min { get; } = 0;
+    public long max { get; } = Int64.MaxValue;
+    public string classId;
+    public string addr;
+    public string isExplicit;
+
+    public OIDType(long min, long max, string classId, string addr, string isExplicit)
+    {
+        this.min = min;
+        this.max = max;
+        this.classId = classId;
+        this.addr = addr;
+        this.isExplicit = isExplicit;
+    }
     public bool check(string value)
     {
-        throw new NotImplementedException();
+        string[] numbers = Regex.Split(value, @"\D+");
+        var temp = new List<string>();
+        foreach (var s in numbers)
+        {
+            if (!string.IsNullOrEmpty(s))
+                temp.Add(s);
+        }
+        numbers = temp.ToArray();
+        return numbers.Length >= min && numbers.Length <= max;
     }
 
     public string decode(string value)
@@ -289,9 +322,92 @@ public class OIDType : IType
         throw new NotImplementedException();
     }
 
+
     public string encode(string value)
     {
-        throw new NotImplementedException();
+        string encodedMsg = "";
+
+        if (!check(value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return null; }
+
+        if (classId == addr && addr == isExplicit && isExplicit == null)
+        { //basic types
+            int typeIdentyfier = 6;
+            encodedMsg = "00" + "0";
+            string binary = Convert.ToString(typeIdentyfier, 2).PadLeft(5, '0');
+            encodedMsg = encodedMsg + binary;
+            if (value != null)
+            {
+                encodedMsg = encodedMsg + Utils.EncodeHelper(6, value);
+            }
+            else
+            {
+                encodedMsg += "00000000";
+            }
+            return encodedMsg;
+        }
+        else
+        {
+            if (classId != null)
+            {
+                if (classId == "APPLICATION")
+                {
+                    encodedMsg = "01" + "0"; //PC[tmp.parentType];
+                }
+                else if (classId == "CONTEXT-SPECIFIC")
+                {
+                    encodedMsg = "10" + "0";
+                }
+                else if (classId == "PRIVATE")
+                {
+                    encodedMsg = "11" + "0";
+                }
+                string binary = Utils.LocationHelper(addr);
+                encodedMsg = encodedMsg + binary;
+            }
+            else
+            {
+                encodedMsg = "10" + "0";
+                string binary = "";
+                if (addr != null)
+                {
+                    binary = Utils.LocationHelper(addr);
+                    isExplicit = "EXPLICIT";
+                }
+                encodedMsg = encodedMsg + binary;
+            }
+            if (isExplicit == "EXPLICIT")
+            {
+                char[] array = encodedMsg.ToCharArray();
+                array[2] = '1';
+                encodedMsg = new string(array);
+                if (value != null)
+                {
+                    string exp = Utils.EncodeHelper(6, value);
+                    long length = exp.Length / 8;
+                    string binaryLen = Utils.SizeHelper(length);
+                    exp = binaryLen + exp;
+                    length = exp.Length / 8;
+                    binaryLen = Utils.SizeHelper(length);
+                    encodedMsg = encodedMsg + binaryLen + exp;
+                }
+                else
+                {
+                    encodedMsg += "00000000";
+                }
+            }
+            else
+            {
+                if (value != null)
+                {
+                    encodedMsg = encodedMsg + Utils.EncodeHelper(6, value);
+                }
+                else
+                {
+                    encodedMsg += "00000000";
+                }
+            }
+            return encodedMsg;
+        }
     }
 }
 
