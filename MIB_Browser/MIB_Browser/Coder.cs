@@ -2,8 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 
-public static class Coder
+public class Coder
 {
+
+    private ASPFile file;
+
+    public Coder(ASPFile f)
+    {
+        file = f;
+    }
+
     private static Dictionary<String, int> types = new Dictionary<String, int>()
     {
         {"BOOLEAN",1 },
@@ -48,7 +56,7 @@ public static class Coder
         {"SEQUENCE OF","1" }
     };
 
-    public static string EncodeToBono(string value)
+    public string EncodeToBono(string value)
     {
         long toEncode = Int64.Parse(value);
         string toRet = "";
@@ -80,25 +88,16 @@ public static class Coder
           toRet.Select(x => Convert.ToString(Convert.ToInt32(x + "", 16), 2).PadLeft(4, '0')));
         return s;
     }
-    public static Boolean CheckConstraints(string type, string value)
+    public Boolean CheckConstraints(string type, string value)
     {
-        Constraint toCheck = Types.GetConstraints(type);
-        if (toCheck.isSize)
-        {
-            if (value.Length < Int64.Parse(toCheck.min) || value.Length > Int64.Parse(toCheck.max))
-            {
-                return false;
-            }
-        }
-        else { 
-            if(Int64.Parse(value) < Int64.Parse(toCheck.min) || Int64.Parse(value) > Int64.Parse(toCheck.max))
-            {
-                return false;
-            }
-        }
-        return true;
+        Constraint toCheck = file.GetConstraints(type);
+        if (((int)toCheck.rangeType & 0b0100) > 0) 
+            return value.Length >= toCheck.min && value.Length <= toCheck.max;
+        else 
+            return Int64.Parse(value) >= toCheck.min && Int64.Parse(value) <= toCheck.max;
+
     }
-    public static string EncodeHelper(string type, string value)
+    public string EncodeHelper(string type, string value)
     {
         string encodedMsg = "";
         if (types.ContainsKey(type))
@@ -119,11 +118,7 @@ public static class Coder
         return encodedMsg;
     }
 
-
-
-
-
-    public static ObjectType Encode(ObjectType toEncode, string value)
+    public ObjectType Encode(ObjectType toEncode, string value)
     {
         string encodedMsg = "";
         string type = toEncode.syntax;
@@ -147,7 +142,7 @@ public static class Coder
         }
         else
         {
-            Constraint tmp = Types.GetConstraints(type);
+            Constraint tmp = file.GetConstraints(type);
             string[] loc = tmp.location.Split(' ');
             if(loc[0] == "APLICATION")// TODO add other types
             {
@@ -155,7 +150,7 @@ public static class Coder
                 string binary = Convert.ToString(Int64.Parse(loc[1]), 2).PadLeft(5, '0');
                 encodedMsg = encodedMsg + binary;
             }
-            if (tmp.isExplicit)
+            if (tmp.rangeType == ConstraintRangeType.EXPLICIT || tmp.rangeType == ConstraintRangeType.SIZE_EXPLICIT)
             {
                 string exp = EncodeHelper(tmp.parentType, value);
                 int length = exp.Length / 8;

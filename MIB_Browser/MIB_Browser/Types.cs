@@ -3,10 +3,11 @@ using System.Collections.Generic;
 
 public enum ConstraintRangeType
 {
-	NONE,
-	EXPLICIT,
-	SIZE,
-	RANGE
+	NONE = 0b0000,
+	EXPLICIT = 0b0001,
+	RANGE = 0b0010,
+	SIZE_EXPLICIT = 0b0101,
+	SIZE_RANGE = 0b0110
 }
 public class Constraint
 {
@@ -28,29 +29,10 @@ public class Constraint
 		location = Location;
 	}
 
-
+	bool isSize { get; }
 	public ConstraintRangeType rangeType { get; }
 	public string parentType { get; }
 	public int min { get; }
 	public int max { get; }
 	public string location { get; } // APLICATION 1
-}
-
-
-public static class Types
-{
-	public static Dictionary<String, Constraint> types = new Dictionary<String, Constraint>();
-
-	public static void AddNew(String Name, Boolean IsSize, Boolean IsExplicit, string ParentType, String Min, String Max, String Location)
-	{
-		types.Add(Name, new Constraint(IsSize, IsExplicit, ParentType, Min, Max));
-	}
-	public static Constraint GetConstraints(String Name)
-    {
-		if (types.ContainsKey(Name))
-		{
-			return types[Name];
-		}
-		return new Constraint(false,false,"INTEGER", "-100", "100","APLICATION 4"); //shouldn't be possible
-    }
 }
