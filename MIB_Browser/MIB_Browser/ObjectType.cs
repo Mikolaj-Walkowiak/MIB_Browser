@@ -7,6 +7,7 @@ public class ObjectType : ITreeNode
 	public string access;
 	public string status;
 	public string description;
+    public string value;
 
     public int id;
     public string name;
@@ -20,7 +21,11 @@ public class ObjectType : ITreeNode
     {
         return name;
     }
-	public Dictionary<int, ITreeNode> getChildren()
+    public string getValue()
+    {
+        return value;
+    }
+    public Dictionary<int, ITreeNode> getChildren()
     {
         return children;
     }

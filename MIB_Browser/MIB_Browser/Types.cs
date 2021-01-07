@@ -31,6 +31,10 @@ public static class Types
 	}
 	public static Constraint GetConstraints(String Name)
     {
-		return types[Name];
+		if (types.ContainsKey(Name))
+		{
+			return types[Name];
+		}
+		return new Constraint(false, "-2137", "2137"); //TODO xd
     }
 }

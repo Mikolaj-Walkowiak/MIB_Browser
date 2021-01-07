@@ -87,5 +87,30 @@ public static class Coder
         }
         return true;
     }
+
+    public static ObjectType Encode(ObjectType toEncode, string value)
+    {
+        string encodedMsg = "";
+        string type = toEncode.syntax;
+        if (!CheckConstraints(type, value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return toEncode; }
+        if (types.ContainsKey(type)) {
+            int typeIdentyfier = types[type];
+            encodedMsg = "000"; //TODO 3RD BIT NEEDS TO BE CHANGED ACCORDING TO IT BEEING PRIMITIVE/CONSTRUCTED
+            string binary = Convert.ToString(typeIdentyfier, 2).PadLeft(5, '0');
+            encodedMsg = encodedMsg + binary;
+            if( typeIdentyfier == 2)
+            {
+                binary = EncodeToBono(value); // TODO change to binary lol
+                int length = binary.Length / 2;
+                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                encodedMsg = encodedMsg + binaryLen;
+                encodedMsg = encodedMsg + binary;
+                toEncode.value = encodedMsg;
+
+            }
+        }
+
+        return toEncode;
+    }
 	
 }
