@@ -28,7 +28,7 @@ namespace MIB_Browser
                 else if (command[0] == "test" && command.Length == 1)
                 {
                     ObjectType objType = (ObjectType)node;
-                    objType = new Coder(file).Encode(objType, "1");
+                    objType = new Coder(file).Encode(objType, "{iso(1) org(3) dod(6) internet(1) private(4) 1}");
                     Console.WriteLine(node.getName() + "(" + node.getId() + "): OBJECT TYPE");
                     Console.WriteLine("path: " + String.Join('.', getPath(node)));
                     Console.WriteLine("syntax: " + objType.syntax);

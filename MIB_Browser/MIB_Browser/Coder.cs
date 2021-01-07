@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 public class Coder
 {
@@ -53,6 +54,7 @@ public class Coder
         {"INTEGER","0" },
         {"NULL","0" },
         {"OCTET STRING","1" }, // 2hard4me
+        {"OBJECT IDENTIFIER","0" },
         {"SEQUENCE","1" },
         {"SEQUENCE OF","1" }
     };
@@ -145,7 +147,7 @@ public class Coder
             if (typeIdentyfier == 2)
             {
                 string binary = EncodeToBono(value);
-                long length = 259;
+                long length = binary.Length/8;
                 string binaryLen = SizeHelper(length);
                 encodedMsg = encodedMsg + binaryLen;
                 encodedMsg = encodedMsg + binary;
@@ -161,6 +163,43 @@ public class Coder
                 string binaryLen = SizeHelper(length);
                 encodedMsg = encodedMsg + binaryLen;
                 encodedMsg = encodedMsg + binary;
+                return encodedMsg;
+            }
+            if (typeIdentyfier == 6)
+            {
+                encodedMsg = "0";
+                string[] numbers = Regex.Split(value, @"\D+");
+                var temp = new List<string>();
+                foreach (var s in numbers)
+                {
+                    if (!string.IsNullOrEmpty(s))
+                        temp.Add(s);
+                }
+                numbers = temp.ToArray();
+                int i = 40 * int.Parse(numbers[0]);
+                if(numbers.Length > 2)
+                {
+                    i += int.Parse(numbers[1]);
+                    encodedMsg = encodedMsg + Convert.ToString(i, 2).PadLeft(7, '0');
+                    for(int j = 2; j < numbers.Length; ++j)
+                    {
+                        encodedMsg = encodedMsg + "0";
+                        encodedMsg = encodedMsg + Convert.ToString(int.Parse(numbers[j]), 2).PadLeft(7, '0');
+                    }
+                }
+                else if (numbers.Length == 2)
+                {
+                    i += int.Parse(numbers[1]);
+                    encodedMsg = encodedMsg + Convert.ToString(i, 2).PadLeft(7, '0');
+                }
+
+                else
+                {
+                    encodedMsg = encodedMsg + Convert.ToString(i, 2).PadLeft(7, '0');
+                }
+                long length = encodedMsg.Length / 8;
+                string binaryLen = SizeHelper(length);
+                encodedMsg = binaryLen + encodedMsg;
                 return encodedMsg;
             }
             if (typeIdentyfier == 16)
