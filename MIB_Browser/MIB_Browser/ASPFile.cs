@@ -37,7 +37,8 @@ public class ASPFile
         }
     };
 
-    public Dictionary<String, IType> types = new Dictionary<String, IType> { 
+    public Dictionary<String, IType> types = new Dictionary<String, IType>
+    {
         ["INTEGER"] = new IntegerType(Int64.MinValue, Int64.MaxValue, null, null, null),
         ["OCTET STRING"] = new StringType(0, Int64.MaxValue, null, null, null),
         ["OBJECT IDENTIFIER"] = new OIDType(),
@@ -70,6 +71,16 @@ public class ASPFile
         }
     }
 
+    public void AddType(string name, IType baseType)
+    {
+        types.Add(name, baseType);
+    }
+
+    public bool tryFetchType(string value, out IType type)
+    {
+        return types.TryGetValue(value, out type);
+    }
+
     public ITreeNode findPath(string[] path, ITreeNode context)
     {
         ITreeNode node = context;
@@ -87,12 +98,6 @@ public class ASPFile
         }
         return node;
     }
-
-    public void AddType(string name, IType baseType)
-    {
-        types.Add(name, baseType);
-    }
-
     public ITreeNode findPath(string[] path)
     {
         string pathRoot = path[0];
@@ -140,10 +145,5 @@ public class ASPFile
     public IType fetchType(string value)
     {
         return types[value];
-    }
-
-    public bool tryFetchType(string value, out IType type)
-    {
-        return types.TryGetValue(value, out type);
     }
 }

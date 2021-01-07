@@ -65,9 +65,9 @@ public class Parser
         Dictionary<string, IType> members = new Dictionary<string, IType>();
         foreach (string el in match.Groups["content"].Value.Split(","))
         {
-            string[] data = el.Trim().Split(" ");
-            IType baseType = file.fetchType(string.Join(' ', data.AsSpan(1, data.Length - 1).ToArray()));
-            members.Add(data[0], baseType);
+            Match syntaxMatch = Expressions.Types.syntax.Match(el.Trim());
+            IType baseType = file.fetchType(syntaxMatch.Groups["type"].Value);
+            members.Add(syntaxMatch.Groups["name"].Value, baseType);
         }
         file.AddType(match.Groups["name"].Value, new SequenceType(members));
     }
