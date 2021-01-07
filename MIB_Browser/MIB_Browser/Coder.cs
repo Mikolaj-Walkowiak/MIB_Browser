@@ -58,13 +58,13 @@ public static class Coder
         else
         {
             toRet = string.Format("{0:X}", toEncode);
+            if (toRet.Length % 2 == 1)
+            {
+                toRet = '0' + toRet;
+            }
             if ("89ABCDEF".Contains(toRet[0]))
             {
                 toRet = "00" + toRet;
-            }
-            if(toRet.Length % 2 == 1)
-            {
-                toRet = '0' + toRet;
             }
         }
         return toRet;

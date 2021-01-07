@@ -20,25 +20,25 @@ public class Expressions
 											"INDEX {(?<index>[^}]*)} |" +
 										")*" +
 									"::=" + br + "{(?<address>[^}]*)}"
-		, RegexOptions.Singleline);
+		);
 	}
 
 	public class Imports
     {
 		public static Regex tag = new Regex("^" +
 									"IMPORTS (.+?);"
-		, RegexOptions.Singleline);
+		);
 
 		public static Regex singleImport = new Regex(
 										"(.+?) FROM (.+?);? "
-			, RegexOptions.Singleline);
+		);
 	}
 
 	public class ObjectId
     {
 		public static Regex tag = new Regex("^" +
 									"(?<OID>\\S+) OBJECT IDENTIFIER ::= {(?<address>[^}]*)}"
-		, RegexOptions.Singleline);
+		);
 	}
 
 	public class Path
@@ -48,8 +48,9 @@ public class Expressions
 
 	public class Types
     {
-		public static Regex standardTypes = new Regex("(?< name >\\w +) ::=\\s*\\[(?< INBO >[^\\]]+)\\]\\s+(?<type>[\\w\\s]+)\\((?<range>.*?)\\)\\s+");
-		public static Regex sequenceTypes = new Regex("(?<name>\\w+) ::=\\s*(?<seqorchoice>(SEQUENCE|CHOICE))\\s*{(?<content>[^}]+)}");
+		public static Regex standardType = new Regex("(?<name>\\w+) ::= \\[(?<INBO>[^\\]]+)\\] (?<type>[\\w\\s]+)\\((?<range>.*?)\\) ");
+		public static Regex sequenceType = new Regex("(?<name>\\w+) ::= SEQUENCE {(?<content>[^}]+)}");
+		public static Regex choiceType = new Regex("(?<name>\\w+) ::= CHOICE {(?<content>[^}]+)}");
 		public static Regex syntaxCheck = new Regex("(?<type>\\w+) (?<range>.*?)\\)?\\s*$");
 
 	}
