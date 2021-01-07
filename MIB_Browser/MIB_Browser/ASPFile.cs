@@ -37,7 +37,12 @@ public class ASPFile
         }
     };
 
-    public Dictionary<String, Constraint> types = new Dictionary<String, Constraint>();
+    public Dictionary<String, IType> types = new Dictionary<String, IType> { 
+        ["INTEGER"] = new IntegerType(Int64.MinValue, Int64.MaxValue, null, null, null),
+        ["OCTET STRING"] = new StringType(0, Int64.MaxValue, null, null, null),
+        ["OBJECT IDENTIFIER"] = new OIDType(),
+        ["NULL"] = new NullType()
+    };
 
     public ASPFile(string file)
     {
@@ -82,6 +87,12 @@ public class ASPFile
         }
         return node;
     }
+
+    public void AddType(string name, IType baseType)
+    {
+        types.Add(name, baseType);
+    }
+
     public ITreeNode findPath(string[] path)
     {
         string pathRoot = path[0];
@@ -129,5 +140,10 @@ public class ASPFile
     public IType fetchType(string value)
     {
         return types[value];
+    }
+
+    public bool tryFetchType(string value, out IType type)
+    {
+        return types.TryGetValue(value, out type);
     }
 }

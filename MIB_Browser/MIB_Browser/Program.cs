@@ -27,8 +27,8 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "test" && command.Length == 1)
                 {
-                    ObjectType objType = (ObjectType)node;
-                    objType = new Coder(file).Encode(objType, "{iso(1) org(3) dod(6) internet(1) private(4) 1}");
+                    /*ObjectType objType = (ObjectType)node;
+                    objType = new Coder(file).Encode(objType, "Jones");
                     Console.WriteLine(node.getName() + "(" + node.getId() + "): OBJECT TYPE");
                     Console.WriteLine("path: " + String.Join('.', getPath(node)));
                     Console.WriteLine("syntax: " + objType.syntax);
@@ -36,7 +36,7 @@ namespace MIB_Browser
                     Console.WriteLine("status: " + objType.status);
                     Console.WriteLine("value: " + objType.value);
                     Console.WriteLine("description: " + objType.description);
-                    Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");
+                    Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");*/
 
                 }
                 else if (command[0] == "cls" && command.Length == 1)
@@ -121,7 +121,6 @@ namespace MIB_Browser
                 ObjectType objType = (ObjectType)node;
                 Console.WriteLine(node.getName() + "(" + node.getId() + "): OBJECT TYPE");
                 Console.WriteLine("path: " + String.Join('.', getPath(node)));
-                Console.WriteLine("syntax: " + objType.syntax);
                 Console.WriteLine("access: " + objType.access);
                 Console.WriteLine("status: " + objType.status);
                 Console.WriteLine("value: " + objType.value);

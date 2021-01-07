@@ -57,24 +57,29 @@ public class Expressions
 
 	public class Types
     {
-		public static Regex standardType = new Regex("^(?<name>\\w+) ::= \\[(?<INBO>[^\\]]+)\\] (?<type>[\\w\\s]+)\\((?<range>.*?)\\) ");
+		public static Regex standardType = new Regex("^(?<name>\\w+) ::= (?:\\[(?<INBO>[^\\]]+)\\] )?(?:(?<ie>(IMPLICIT|EXPLICIT)) )?(?<type>OBJECT IDENTIFIER|OCTET STRING|[A-Za-z0-9]+) (?:\\((?<range>.*?)\\) )?");
 		public static Regex sequenceType = new Regex("^(?<name>\\w+) ::= SEQUENCE {(?<content>[^}]+)}");
 		public static Regex choiceType = new Regex("^(?<name>\\w+) ::= CHOICE {(?<content>[^}]+)}");
-		public static Regex syntaxCheck = new Regex("^(?<type>\\w+) (?<range>.*?)\\)?\\s*$");
+		public static Regex syntax = new Regex("^(?<name>[^ ]+) (?<type>OBJECT IDENTIFIER|OCTET STRING|\\w+)(?: \\((?<cons>[^)]+)\\))?$");
 
 		public class Ranges
         {
-			public static Regex minmaxRange = new Regex(@"([0-9]+)\\.\\.([0-9]+)");
-			public static Regex explicitRange = new Regex(@"^([0-9]+)$");
-			public static Regex sizeMinmaxRange = new Regex(@"SIZE ?\\(([0-9]+)\\.\\.([0-9]+)\\)");
-			public static Regex sizeExplicitRange = new Regex(@"SIZE ?\\(([0-9]+)\\)");
-			public static List<Tuple<ConstraintRangeType, Regex>> ranges = new List<Tuple<ConstraintRangeType, Regex>> {
-				new Tuple<ConstraintRangeType, Regex>(ConstraintRangeType.RANGE, minmaxRange),
-				new Tuple<ConstraintRangeType, Regex>(ConstraintRangeType.EXPLICIT, explicitRange),
-				new Tuple<ConstraintRangeType, Regex>(ConstraintRangeType.SIZE_RANGE, sizeMinmaxRange),
-				new Tuple<ConstraintRangeType, Regex>(ConstraintRangeType.SIZE_EXPLICIT, sizeExplicitRange),
+			public static Regex range = new Regex(@"^([0-9]+)\.\.([0-9]+)");
+			public static Regex setValue = new Regex(@"^([0-9]+)$");
+			public static Regex sizeValue = new Regex(@"^SIZE ?\(([0-9]+)\.\.([0-9]+)\)");
+			public static Regex sizeRange = new Regex(@"^SIZE ?\(([0-9]+)\)");
+			public static List<Regex> ranges = new List<Regex> {
+				range,
+				setValue,
+				sizeValue,
+				sizeRange
 			};
 		}
 	}
+
+	public class Macro
+    {
+		public static Regex tag = new Regex(@"^[^ ]+ MACRO ::= BEGIN.+?END");
+    }
 }
 

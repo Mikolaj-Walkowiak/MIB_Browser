@@ -11,16 +11,37 @@ public class Parser
         file = f;
 	}
 
-    public void parse(string str)
+    public void parse(string input)
     {
+
         List<Tuple<Regex, Action<Match>>> tags = new List<Tuple<Regex, Action<Match>>>(new Tuple<Regex, Action<Match>>[]{
             new Tuple<Regex, Action<Match>>(Expressions.header, new Action<Match>((Match match) => { })),
+            new Tuple<Regex, Action<Match>>(Expressions.Macro.tag, new Action<Match>((Match match) => { })),
             new Tuple<Regex, Action<Match>>(Expressions.Imports.tag, new Action<Match>(parseImport)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.choiceType, new Action<Match>(parseChoiceType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.sequenceType, new Action<Match>(parseSequenceType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.standardType, new Action<Match>(parseStandardType)),
+
+            new Tuple<Regex, Action<Match>>(Expressions.word, new Action<Match>((Match match) => { })), // fallback
+        });
+        string str = input;
+        while (str.Length > 0)
+        {
+            foreach (var tag in tags)
+            {
+                Match match = tag.Item1.Match(str);
+                if (match.Success)
+                {
+                    tag.Item2(match);
+                    str = str.Substring(match.Length);
+                    break;
+                }
+            }
+        }
+        str = input;
+        tags = new List<Tuple<Regex, Action<Match>>>(new Tuple<Regex, Action<Match>>[]{  
             new Tuple<Regex, Action<Match>>(Expressions.ObjectType.tag, new Action<Match>(parseObjectType)),
             new Tuple<Regex, Action<Match>>(Expressions.ObjectId.tag, new Action<Match>(parseObjectId)),
-            new Tuple<Regex, Action<Match>>(Expressions.Types.standardType, new Action<Match>(parseStandardType)),
-            new Tuple<Regex, Action<Match>>(Expressions.Types.sequenceType, new Action<Match>(parseSequenceType)),
-            new Tuple<Regex, Action<Match>>(Expressions.Types.choiceType, new Action<Match>(parseChoiceType)),
 
             new Tuple<Regex, Action<Match>>(Expressions.word, new Action<Match>((Match match) => { })), // fallback
         });
@@ -41,19 +62,35 @@ public class Parser
 
     private void parseChoiceType(Match match)
     {
-        //throw new NotImplementedException();
+        Dictionary<string, IType> members = new Dictionary<string, IType>();
+        foreach (string el in match.Groups["content"].Value.Split(","))
+        {
+            string[] data = el.Trim().Split(" ");
+            IType baseType = file.fetchType(string.Join(' ', data.AsSpan(1, data.Length - 1).ToArray()));
+            members.Add(data[0], baseType);
+        }
+        file.AddType(match.Groups["name"].Value, new SequenceType(members));
     }
 
     private void parseSequenceType(Match match)
     {
-        //throw new NotImplementedException();
+        Dictionary<string, IType> members = new Dictionary<string, IType>();
+        foreach(string el in match.Groups["content"].Value.Split(","))
+        {
+            Match syntaxMatch = Expressions.Types.syntax.Match(el.Trim());
+            IType baseType = file.fetchType(syntaxMatch.Groups["type"].Value);
+            members.Add(syntaxMatch.Groups["name"].Value, baseType);
+        }
+        file.AddType(match.Groups["name"].Value, new SequenceType(members));
     }
 
     private void parseStandardType(Match match)
     {
-        
-
-        file.AddType(match.Groups["name"].Value, rangeType, match.Groups["type"].Value, min, max, match.Groups["INBO"].Value);
+        IType baseType = file.fetchType(match.Groups["type"].Value);
+        string[] addr = match.Groups["INBO"].Value.Split(" ");
+        var cons = parseConstraint(match.Groups["range"].Value);
+        if (cons == null) file.AddType(match.Groups["name"].Value, baseType);
+        else file.AddType(match.Groups["name"].Value, baseType.derive(cons.Item1, cons.Item2, addr[0], addr[1], match.Groups["ie"].Value));
     }
 
     private void parseImport(Match match)
@@ -69,6 +106,7 @@ public class Parser
                 {
                     ITreeNode node = importFile.findNode(import.Trim());
                     if (node != null) file.mergeTree(node);
+                    if (importFile.tryFetchType(import.Trim(), out IType type)) file.AddType(import.Trim(), type);
                 }
             }
             else Console.WriteLine("file " + fileName + " not found");
@@ -96,9 +134,10 @@ public class Parser
         if(syntaxMatch.Success)
         {
             Dictionary<string, long> enumDict = new Dictionary<string, long>();
-            foreach (string entry in syntaxMatch.Groups[1].Value.Split(","))
+            foreach (string spl in syntaxMatch.Groups[1].Value.Split(","))
             {
-                enumDict.Add(entry.Substring(entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(")+1, entry.IndexOf(")"))));
+                string entry = spl.Trim();
+                enumDict.Add(entry.Substring(0, entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(")+1, entry.IndexOf(")") - entry.IndexOf("(")-1)));
             }
             return new EnumIntegerType(enumDict);
         }
@@ -115,7 +154,7 @@ public class Parser
             return new SequenceOfType(file.fetchType(syntaxMatch.Groups[1].Value));
         }
 
-        return new StringType();
+        return null;
     }
 
     private void parseObjectId(Match match)
@@ -129,8 +168,19 @@ public class Parser
         objId.parent.addChild(objId.id, objId);
     }
 
-    private Tuple<long, long> parseConstraint(string cons)
+    private Tuple<long, long> parseConstraint(string range)
     {
-
+        int min = 0, max = 0;
+        foreach (Regex t in Expressions.Types.Ranges.ranges)
+        {
+            Match rangeMatch = t.Match(range);
+            if (rangeMatch.Success)
+            {
+                min = Int32.Parse(rangeMatch.Groups[1].Value);
+                max = rangeMatch.Groups.Count > 1 ? Int32.Parse(rangeMatch.Groups[1].Value) : min;
+                return new Tuple<long, long>(min, max);
+            }
+        }
+        return null;
     }
 }

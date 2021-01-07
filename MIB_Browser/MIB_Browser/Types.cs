@@ -7,13 +7,25 @@ public interface IType
 	bool check(string value);
 	string encode(string value);
 	string decode(string value);
+    IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null);
 }
 
 public class IntegerType : IType
 {
-    public int min { get; } = Int32.MinValue;
-    public int max { get; } = Int32.MaxValue;
+    public long min { get; } = Int64.MinValue;
+    public long max { get; } = Int64.MaxValue;
+    public string classId;
+    public string addr;
+    public string isExplicit;
 
+    public IntegerType(long min, long max, string classId, string addr, string isExplicit)
+    {
+        this.min = min;
+        this.max = max;
+        this.classId = classId;
+        this.addr = addr;
+        this.isExplicit = isExplicit;
+    }
     public bool check(string value)
     {
         return Int64.Parse(value) >= min && Int64.Parse(value) <= max;
@@ -25,15 +37,16 @@ public class IntegerType : IType
 
     public string encode(string value)
     {
-        int typeIdentifier = 2;
-        string encodedMsg = "000";
-        string binary = Convert.ToString(typeIdentifier, 2).PadLeft(5, '0');
-        encodedMsg = encodedMsg + binary;
-        binary = Utils.EncodeToBono(Int64.Parse(value));
-        int length = binary.Length / 8;
-        string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
-        encodedMsg = encodedMsg + binaryLen + binary;
-        return encodedMsg;
+        throw new NotImplementedException();
+    }
+
+    public IType derive(long min, long max, string classId, string addr, string isExplicit)
+    {
+        return new IntegerType(min, max,
+            classId != null ? classId : this.classId,
+            addr != null ? addr : this.addr,
+            isExplicit != null ? isExplicit : this.isExplicit
+            );
     }
 }
 
@@ -44,6 +57,7 @@ public class EnumIntegerType : IType
         enumDict = d;
     }
     private Dictionary<string, long> enumDict;
+    public string location;
     public bool check(string value)
     {
         if (Int32.TryParse(value, out int num)) return enumDict.ContainsValue(num);
@@ -56,26 +70,31 @@ public class EnumIntegerType : IType
 
     public string encode(string value)
     {
-        int typeIdentifier = 2;
-        string encodedMsg = "000";
-        string binary = Convert.ToString(typeIdentifier, 2).PadLeft(5, '0');
-        encodedMsg = encodedMsg + binary;
-        if (Int64.TryParse(value, out long num))
-            binary = Utils.EncodeToBono(num);
-        else
-            binary = Utils.EncodeToBono(enumDict[value]);
-        int length = binary.Length / 8;
-        string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
-        encodedMsg = encodedMsg + binaryLen + binary;
-        return encodedMsg;
+        throw new NotImplementedException();
+    }
+
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    {
+        throw new NotImplementedException();
     }
 }
 
 public class StringType : IType
 {
-    public int min { get; } = 0;
-    public int max { get; } = Int32.MaxValue;
+    public long min { get; } = 0;
+    public long max { get; } = Int64.MaxValue;
+    public string classId;
+    public string addr;
+    public string isExplicit;
 
+    public StringType(long min, long max, string classId, string addr, string isExplicit)
+    {
+        this.min = min;
+        this.max = max;
+        this.classId = classId;
+        this.addr = addr;
+        this.isExplicit = isExplicit;
+    }
     public bool check(string value)
     {
         return value.Length >= min && value.Length <= max;
@@ -89,11 +108,70 @@ public class StringType : IType
     {
         throw new NotImplementedException();
     }
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    {
+        return new StringType(min, max,
+            classId != null ? classId : this.classId,
+            addr != null ? addr : this.addr,
+            isExplicit != null ? isExplicit : this.isExplicit
+            );
+    }
+}
+
+public class OIDType : IType
+{
+    public bool check(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string decode(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string encode(string value)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class NullType : IType
+{
+    public bool check(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string decode(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string encode(string value)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class SequenceType : IType
 {
-	List<IType> members;
+	Dictionary<string, IType> members;
+
+    public SequenceType(Dictionary<string, IType> members)
+    {
+        this.members = members;
+    }
 
     public bool check(string value)
     {
@@ -101,6 +179,11 @@ public class SequenceType : IType
     }
 
     public string decode(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
         throw new NotImplementedException();
     }
@@ -126,6 +209,41 @@ public class SequenceOfType : IType
     }
 
     public string decode(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string encode(string value)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class ChoiceType : IType
+{
+    Dictionary<string, IType> members;
+
+    public ChoiceType(Dictionary<string, IType> members)
+    {
+        this.members = members;
+    }
+
+    public bool check(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string decode(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
         throw new NotImplementedException();
     }
