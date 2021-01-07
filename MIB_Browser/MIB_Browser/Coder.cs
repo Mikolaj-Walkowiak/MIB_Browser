@@ -18,6 +18,7 @@ public class Coder
         {"INTEGER",2 },
         {"BIT STRING",3 },
         {"OCTET STRING",4 },
+        {"NULL",5 },
         {"OBJECT IDENTIFIER",6 },
         {"ObjectDescriptor",7 },
         {"EXTERNAL",8 },
@@ -103,7 +104,24 @@ public class Coder
         if (types.ContainsKey(type))
         {
             int typeIdentyfier = types[type];
+            if (typeIdentyfier == 1)
+            {
+                string binary = "";
+                if(value == "TRUE")
+                {
+                    binary = "11111111";
+                }
+                else
+                {
+                    binary = "00000000";
+                }
+                int length = binary.Length / 8;
+                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                encodedMsg = encodedMsg + binaryLen;
+                encodedMsg = encodedMsg + binary;
+                return encodedMsg;
 
+            }
             if (typeIdentyfier == 2)
             {
                 string binary = EncodeToBono(value);
@@ -114,6 +132,22 @@ public class Coder
                 return encodedMsg;
 
             }
+            if (typeIdentyfier == 4)
+            {
+                string binary = "";
+                foreach (char c in value)
+                    binary+=(Convert.ToString(c, 2).PadLeft(8, '0'));
+                int length = binary.Length / 8;
+                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                encodedMsg = encodedMsg + binaryLen;
+                encodedMsg = encodedMsg + binary;
+                return encodedMsg;
+            }
+            if (typeIdentyfier == 16)
+            {
+                //podobno wiesz jak to zrobić xd
+
+            }
         }
         return encodedMsg;
     }
@@ -122,6 +156,7 @@ public class Coder
     {
         string encodedMsg = "";
         string type = toEncode.syntax;
+
         if (!CheckConstraints(type, value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return toEncode; }
 
         if (types.ContainsKey(type)) { //basic types
@@ -129,42 +164,78 @@ public class Coder
             encodedMsg = "00" + PC[type];
             string binary = Convert.ToString(typeIdentyfier, 2).PadLeft(5, '0');
             encodedMsg = encodedMsg + binary;
-            if( typeIdentyfier == 2)
+            if (value != null)
             {
-                binary = EncodeToBono(value);
-                int length = binary.Length / 8;
-                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
-                encodedMsg = encodedMsg + binaryLen;
-                encodedMsg = encodedMsg + binary;
-                toEncode.value = encodedMsg;
-
+                encodedMsg = encodedMsg + EncodeHelper(type, value);
             }
+            else
+            {
+                encodedMsg += "00000000";
+            }
+            toEncode.value = encodedMsg;
+
         }
         else
         {
             Constraint tmp = file.GetConstraints(type);
             string[] loc = tmp.location.Split(' ');
-            if(loc[0] == "APLICATION")// TODO add other types
+            if (loc.Length > 1) { 
+            if(loc[0] == "APLICATION")
             {
                 encodedMsg = "01" + PC[tmp.parentType];
+            }
+            else if (loc[0] == "CONTEXT-SPECIFIC")
+            {
+                encodedMsg = "10" + PC[tmp.parentType];
+            }
+            else if (loc[0] == "PRIVATE")
+            {
+                encodedMsg = "11" + PC[tmp.parentType];
+            }
                 string binary = Convert.ToString(Int64.Parse(loc[1]), 2).PadLeft(5, '0');
                 encodedMsg = encodedMsg + binary;
             }
+            else
+            {
+                encodedMsg = "10" + PC[tmp.parentType];
+                string binary = Convert.ToString(Int64.Parse(loc[0]), 2).PadLeft(5, '0');
+                encodedMsg = encodedMsg + binary;
+            }
+            
+            
             if (tmp.rangeType == ConstraintRangeType.EXPLICIT || tmp.rangeType == ConstraintRangeType.SIZE_EXPLICIT)
             {
-                string exp = EncodeHelper(tmp.parentType, value);
-                int length = exp.Length / 8;
-                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
-                encodedMsg = encodedMsg + binaryLen + exp;
+                char[] array = encodedMsg.ToCharArray();
+                array[2] = '1';
+                encodedMsg = new string(array);
+                if (value != null)
+                {
+                    string exp = EncodeHelper(tmp.parentType, value);
+                    int length = exp.Length / 8;
+                    string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                    exp = binaryLen + exp;
+                    length = exp.Length / 8;
+                    binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                    encodedMsg = encodedMsg + binaryLen + exp;
+                }
+                else
+                {
+                    encodedMsg += "00000000";
+                }
+               
             }
             else
             {
-                encodedMsg = encodedMsg + EncodeHelper(tmp.parentType, value);
+                if (value != null)
+                {
+                    encodedMsg = encodedMsg + EncodeHelper(tmp.parentType, value);
+                }
+                else
+                {
+                    encodedMsg += "00000000";
+                }
             }
-
-
             toEncode.value = encodedMsg;
-
         }
 
 
