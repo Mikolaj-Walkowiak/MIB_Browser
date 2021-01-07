@@ -177,14 +177,14 @@ public class Parser
 
     private Tuple<long, long> parseConstraint(string range)
     {
-        int min = 0, max = 0;
+        long min = 0, max = 0;
         foreach (Regex t in Expressions.Types.Ranges.ranges)
         {
             Match rangeMatch = t.Match(range);
             if (rangeMatch.Success)
             {
                 min = Int32.Parse(rangeMatch.Groups[1].Value);
-                max = rangeMatch.Groups.Count > 1 ? Int32.Parse(rangeMatch.Groups[2].Value) : min;
+                max = rangeMatch.Groups.Count > 2 ? Int64.Parse(rangeMatch.Groups[2].Value) : min;
                 return new Tuple<long, long>(min, max);
             }
         }

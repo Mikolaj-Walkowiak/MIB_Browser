@@ -27,16 +27,16 @@ public class IntegerType : IType
         this.addr = addr;
         this.isExplicit = isExplicit;
     }
-    public bool check(string value)
+    public virtual bool check(string value)
     {
         return Int64.Parse(value) >= min && Int64.Parse(value) <= max;
     }
-    public string decode(string value)
+    public virtual string decode(string value)
     {
         throw new NotImplementedException();
     }
 
-    public string encode(string value)
+    public virtual string encode(string value)
     {
         string encodedMsg = "";
 
@@ -123,7 +123,7 @@ public class IntegerType : IType
         }
     }
 
-    public IType derive(long min, long max, string classId, string addr, string isExplicit)
+    public virtual IType derive(long min, long max, string classId, string addr, string isExplicit)
     {
         return new IntegerType(min, max,
             classId != null ? classId : this.classId,
@@ -133,30 +133,30 @@ public class IntegerType : IType
     }
 }
 
-public class EnumIntegerType : IType
+public class EnumIntegerType : IntegerType
 {
-    public EnumIntegerType(Dictionary<string, long> d)
+    public EnumIntegerType(Dictionary<string, long> d) : base(Int64.MinValue, Int64.MaxValue, null, null, null)
     {
         enumDict = d;
     }
     private Dictionary<string, long> enumDict;
-    public string location;
-    public bool check(string value)
+    public override bool check(string value)
     {
         if (Int32.TryParse(value, out int num)) return enumDict.ContainsValue(num);
         else return enumDict.ContainsKey(value);
     }
-    public string decode(string value)
+    public override string decode(string value)
     {
         throw new NotImplementedException();
     }
 
-    public string encode(string value)
+    public override string encode(string value)
     {
-        throw new NotImplementedException();
+        if (Int32.TryParse(value, out int num)) return base.encode(value);
+        else return base.encode(enumDict[value].ToString());
     }
 
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
         throw new NotImplementedException();
     }
