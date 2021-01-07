@@ -33,9 +33,9 @@ public static class Types
 {
 	public static Dictionary<String, Constraint> types = new Dictionary<String, Constraint>();
 
-	public static void AddNew(String Name, Boolean IsSize, String Min, String Max)
+	public static void AddNew(String Name, Boolean IsSize, Boolean IsExplicit, string ParentType, String Min, String Max)
 	{
-		types.Add(Name, new Constraint(IsSize, Min, Max));
+		types.Add(Name, new Constraint(IsSize, IsExplicit, ParentType, Min, Max));
 	}
 	public static Constraint GetConstraints(String Name)
     {
@@ -43,6 +43,6 @@ public static class Types
 		{
 			return types[Name];
 		}
-		return new Constraint(false, "-2137", "2137"); //TODO xd
+		return new Constraint(false,false,"negro", "-2137", "2137"); //shouldn't be possible
     }
 }
