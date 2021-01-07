@@ -136,7 +136,7 @@ public class ASPFile
         {
             return types[Name];
         }
-        return new Constraint(ConstraintRangeType.SIZE_RANGE, "OCTET STRING", 0, 100, "APLICATION 45"); //shouldn't be possible
+        return new Constraint(ConstraintRangeType.SIZE_RANGE, "INTEGER", 0, 100, "APLICATION 5"); //shouldn't be possible
     }
 
 }

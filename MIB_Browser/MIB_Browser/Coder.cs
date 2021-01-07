@@ -98,6 +98,26 @@ public class Coder
             return Int64.Parse(value) >= toCheck.min && Int64.Parse(value) <= toCheck.max;
 
     }
+    public static String SizeHelper(long len)
+    {
+        //Convert.ToString(length, 2).PadLeft(8, '0');
+        string toRet = "";
+        if (len < 128)
+        {
+            toRet = Convert.ToString(len, 2).PadLeft(8, '0');
+        }
+        else
+        {
+            toRet = "1";
+            string bigBoy = Convert.ToString(len, 2);
+            while ((bigBoy.Length) % 8 != 0) { bigBoy = "0" + bigBoy; }
+            toRet = toRet + Convert.ToString((bigBoy.Length/8), 2).PadLeft(7, '0');
+            toRet = toRet + bigBoy;
+        }
+
+
+        return toRet;
+    }
     public string EncodeHelper(string type, string value)
     {
         string encodedMsg = "";
@@ -115,8 +135,8 @@ public class Coder
                 {
                     binary = "00000000";
                 }
-                int length = binary.Length / 8;
-                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                long length = binary.Length / 8;
+                string binaryLen = SizeHelper(length);
                 encodedMsg = encodedMsg + binaryLen;
                 encodedMsg = encodedMsg + binary;
                 return encodedMsg;
@@ -125,8 +145,8 @@ public class Coder
             if (typeIdentyfier == 2)
             {
                 string binary = EncodeToBono(value);
-                int length = binary.Length / 8;
-                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                long length = 259;
+                string binaryLen = SizeHelper(length);
                 encodedMsg = encodedMsg + binaryLen;
                 encodedMsg = encodedMsg + binary;
                 return encodedMsg;
@@ -137,8 +157,8 @@ public class Coder
                 string binary = "";
                 foreach (char c in value)
                     binary+=(Convert.ToString(c, 2).PadLeft(8, '0'));
-                int length = binary.Length / 8;
-                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                long length = binary.Length / 8;
+                string binaryLen = SizeHelper(length);
                 encodedMsg = encodedMsg + binaryLen;
                 encodedMsg = encodedMsg + binary;
                 return encodedMsg;
@@ -185,6 +205,7 @@ public class Coder
 
         return toRet;
     }
+
 
     public ObjectType Encode(ObjectType toEncode, string value)
     {
@@ -245,11 +266,11 @@ public class Coder
                 if (value != null)
                 {
                     string exp = EncodeHelper(tmp.parentType, value);
-                    int length = exp.Length / 8;
-                    string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                    long length = exp.Length / 8;
+                    string binaryLen = SizeHelper(length);
                     exp = binaryLen + exp;
                     length = exp.Length / 8;
-                    binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                    binaryLen = SizeHelper(length);
                     encodedMsg = encodedMsg + binaryLen + exp;
                 }
                 else
