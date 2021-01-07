@@ -3,20 +3,28 @@ using System.Collections.Generic;
 
 public class Constraint
 {
-	public Constraint(Boolean IsSize, string Min, string Max)
+
+	public Constraint(Boolean IsSize, Boolean IsExplicit, string ParentType, string Min, string Max)
 	{
 		isSize = IsSize;
+		isExplicit = IsExplicit;
+		parentType = ParentType;
 		min = Min;
 		max = Max;
 	}
-	public Constraint(Boolean IsSize, string Singular)
+	public Constraint(Boolean IsSize, Boolean IsExplicit, string ParentType, string Singular)
 	{
 		isSize = IsSize;
+		isExplicit = IsExplicit;
+		parentType = ParentType;
 		min = Singular;
 		max = Singular;
 	}
 
+
 	public Boolean isSize { get; }
+	public Boolean isExplicit { get; }
+	public string parentType { get; }
 	public string min { get; }
 	public string max { get; }
 }
