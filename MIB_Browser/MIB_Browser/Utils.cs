@@ -5,17 +5,6 @@ using System.Text.RegularExpressions;
 
 public static class Utils
 {
-    public static Boolean CheckConstraints(bool range, string value, long min, long max)
-    {
-        if (range)
-        {
-            return value.Length >= min && value.Length <= max;
-        }
-        else
-        {
-            return Int64.Parse(value) >= min && Int64.Parse(value) <= max;
-        }
-    }
     public static string EncodeToBono(string value)
     {
         long toEncode = Int64.Parse(value);

@@ -39,7 +39,7 @@ public class IntegerType : IType
     {
         string encodedMsg = "";
 
-        if (!Utils.CheckConstraints(false, value, min, max)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return null; }
+        if (!check(value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return null; }
 
         if (classId == addr && addr == isExplicit && isExplicit == null)
         { //basic types
