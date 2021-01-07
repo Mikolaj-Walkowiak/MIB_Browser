@@ -183,7 +183,84 @@ public class StringType : IType
 
     public string encode(string value)
     {
-        throw new NotImplementedException();
+        string encodedMsg = "";
+
+        if (!check(value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return null; }
+
+        if (classId == addr && addr == isExplicit && isExplicit == null)
+        { //basic types
+            int typeIdentyfier = 4;
+            encodedMsg = "00" + "1";
+            string binary = Convert.ToString(typeIdentyfier, 2).PadLeft(5, '0');
+            encodedMsg = encodedMsg + binary;
+            if (value != null)
+            {
+                encodedMsg = encodedMsg + Utils.EncodeHelper(4, value);
+            }
+            else
+            {
+                encodedMsg += "00000000";
+            }
+            return encodedMsg;
+        }
+        else
+        {
+            if (classId != null)
+            {
+                if (classId == "APLICATION")
+                {
+                    encodedMsg = "01" + "1"; //PC[tmp.parentType];
+                }
+                else if (classId == "CONTEXT-SPECIFIC")
+                {
+                    encodedMsg = "10" + "1";
+                }
+                else if (classId == "PRIVATE")
+                {
+                    encodedMsg = "11" + "1";
+                }
+                string binary = Utils.LocationHelper(addr);
+                encodedMsg = encodedMsg + binary;
+            }
+            else
+            {
+                encodedMsg = "10" + "1";
+                string binary = Utils.LocationHelper(addr);
+                encodedMsg = encodedMsg + binary;
+            }
+            if (isExplicit == "EXPLICIT")
+            {
+                char[] array = encodedMsg.ToCharArray();
+                array[2] = '1';
+                encodedMsg = new string(array);
+                if (value != null)
+                {
+                    string exp = Utils.EncodeHelper(4, value);
+                    long length = exp.Length / 8;
+                    string binaryLen = Utils.SizeHelper(length);
+                    exp = binaryLen + exp;
+                    length = exp.Length / 8;
+                    binaryLen = Utils.SizeHelper(length);
+                    encodedMsg = encodedMsg + binaryLen + exp;
+                }
+                else
+                {
+                    encodedMsg += "00000000";
+                }
+            }
+            else
+            {
+                if (value != null)
+                {
+                    encodedMsg = encodedMsg + Utils.EncodeHelper(4, value);
+                }
+                else
+                {
+                    encodedMsg += "00000000";
+                }
+            }
+            return encodedMsg;
+        }
     }
     public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
