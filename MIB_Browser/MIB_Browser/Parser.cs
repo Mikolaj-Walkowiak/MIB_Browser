@@ -51,20 +51,7 @@ public class Parser
 
     private void parseStandardType(Match match)
     {
-        ConstraintRangeType rangeType = ConstraintRangeType.NONE;
-        int min = 0, max = 0;
-        string range = match.Groups["range"].Value;
-        foreach(Tuple<ConstraintRangeType, Regex> t in Expressions.Types.Ranges.ranges)
-        {
-            Match rangeMatch = t.Item2.Match(range);
-            if (rangeMatch.Success)
-            {
-                rangeType = t.Item1;
-                min = Int32.Parse(rangeMatch.Groups[0].Value);
-                max = rangeMatch.Groups.Count > 1 ? Int32.Parse(rangeMatch.Groups[1].Value) : min;
-                break;
-            }
-        }
+        
 
         file.AddType(match.Groups["name"].Value, rangeType, match.Groups["type"].Value, min, max, match.Groups["INBO"].Value);
     }
@@ -93,7 +80,7 @@ public class Parser
         ObjectType objType = new ObjectType();
         objType.name = match.Groups["name"].Value;
         objType.description = match.Groups["desc"].Value;
-        objType.syntax = match.Groups["syntax"].Value;
+        objType.type = parseObjectTypeSyntax(match.Groups["syntax"].Value);
         objType.access = match.Groups["access"].Value;
         objType.status = match.Groups["status"].Value;
 
@@ -101,6 +88,34 @@ public class Parser
         objType.id = Int32.Parse(path[path.Length - 1]);
         objType.parent = file.findPath(path.AsSpan(0, path.Length - 1).ToArray());
         objType.parent.addChild(objType.id, objType);
+    }
+
+    private IType parseObjectTypeSyntax(string syntax)
+    {
+        Match syntaxMatch = Expressions.ObjectType.Syntaxes.enumInt.Match(syntax);
+        if(syntaxMatch.Success)
+        {
+            Dictionary<string, long> enumDict = new Dictionary<string, long>();
+            foreach (string entry in syntaxMatch.Groups[1].Value.Split(","))
+            {
+                enumDict.Add(entry.Substring(entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(")+1, entry.IndexOf(")"))));
+            }
+            return new EnumIntegerType(enumDict);
+        }
+
+        syntaxMatch = Expressions.ObjectType.Syntaxes.withConstraint.Match(syntax);
+        if (syntaxMatch.Success)
+        {
+            throw new NotImplementedException();
+        }
+
+        syntaxMatch = Expressions.ObjectType.Syntaxes.sequenceOf.Match(syntax);
+        if (syntaxMatch.Success)
+        {
+            return new SequenceOfType(file.fetchType(syntaxMatch.Groups[1].Value));
+        }
+
+        return new StringType();
     }
 
     private void parseObjectId(Match match)
@@ -112,5 +127,10 @@ public class Parser
         objId.id = Int32.Parse(path[path.Length - 1]);
         objId.parent = file.findPath(path.AsSpan(0, path.Length - 1).ToArray());
         objId.parent.addChild(objId.id, objId);
+    }
+
+    private Tuple<long, long> parseConstraint(string cons)
+    {
+
     }
 }

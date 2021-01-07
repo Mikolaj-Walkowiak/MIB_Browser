@@ -23,6 +23,13 @@ public class Expressions
 										")*" +
 									"::=" + br + "{(?<address>[^}]*)}"
 		);
+
+		public class Syntaxes
+        {
+			public static Regex enumInt = new Regex(@"^INTEGER ?{([^}]+)}$");
+			public static Regex withConstraint = new Regex(@"(.+)\\(([^)]+)\\)$");
+			public static Regex sequenceOf = new Regex(@"^SEQUENCE OF (.+)$");
+        }
 	}
 
 	public class Imports

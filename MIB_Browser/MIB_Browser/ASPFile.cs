@@ -126,17 +126,8 @@ public class ASPFile
         else mergeTree(foreignNode.getParent());
     }
 
-    public void AddType(String Name, ConstraintRangeType RangeType, string ParentType, int Min, int Max, String Location)
+    public IType fetchType(string value)
     {
-        types.Add(Name, new Constraint(RangeType, ParentType, Min, Max, Location));
+        return types[value];
     }
-    public Constraint GetConstraints(String Name)
-    {
-        if (types.ContainsKey(Name))
-        {
-            return types[Name];
-        }
-        return new Constraint(ConstraintRangeType.SIZE_RANGE, "OBJECT IDENTIFIER", 0, 100, "APLICATION 5"); //shouldn't be possible
-    }
-
 }
