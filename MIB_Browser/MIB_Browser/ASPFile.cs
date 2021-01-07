@@ -37,6 +37,8 @@ public class ASPFile
         }
     };
 
+    public Dictionary<String, Constraint> types = new Dictionary<String, Constraint>();
+
     public ASPFile(string file)
     {
         setParents(root);
@@ -68,6 +70,9 @@ public class ASPFile
             new Tuple<Regex, Action<Match>>(Expressions.Imports.tag, new Action<Match>(parseImport)),
             new Tuple<Regex, Action<Match>>(Expressions.ObjectType.tag, new Action<Match>(parseObjectType)),
             new Tuple<Regex, Action<Match>>(Expressions.ObjectId.tag, new Action<Match>(parseObjectId)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.standardType, new Action<Match>(parseStandardType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.sequenceType, new Action<Match>(parseSequenceType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.choiceType, new Action<Match>(parseChoiceType)),
 
             new Tuple<Regex, Action<Match>>(Expressions.word, new Action<Match>((Match match) => { })), // fallback
         });
@@ -84,6 +89,25 @@ public class ASPFile
                 }
             }
         }
+    }
+
+    private void parseChoiceType(Match match)
+    {
+        //throw new NotImplementedException();
+    }
+
+    private void parseSequenceType(Match match)
+    {
+        //throw new NotImplementedException();
+    }
+
+    private void parseStandardType(Match match)
+    {
+        ConstraintRangeType rangeType = ConstraintRangeType.NONE;
+        int min = 0, max = 0;
+        string range = match.Groups["range"].Value;
+
+        AddType(match.Groups["name"].Value, rangeType, match.Groups["type"].Value, min, max, match.Groups["INBO"].Value);
     }
 
     public ITreeNode findPath(string[] path, ITreeNode context)
@@ -190,6 +214,19 @@ public class ASPFile
         objId.id = Int32.Parse(path[path.Length - 1]);
         objId.parent = findPath(path.AsSpan(0, path.Length - 1).ToArray());
         objId.parent.addChild(objId.id, objId);
+    }
+
+    public void AddType(String Name, ConstraintRangeType RangeType, string ParentType, int Min, int Max, String Location)
+    {
+        types.Add(Name, new Constraint(RangeType, ParentType, Min, Max, Location));
+    }
+    public Constraint GetConstraints(String Name)
+    {
+        if (types.ContainsKey(Name))
+        {
+            return types[Name];
+        }
+        return new Constraint(ConstraintRangeType.NONE, "negro", -2137, 2137, null); //shouldn't be possible
     }
 
 }
