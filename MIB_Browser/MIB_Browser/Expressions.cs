@@ -27,7 +27,7 @@ public class Expressions
 		public class Syntaxes
         {
 			public static Regex enumInt = new Regex(@"^INTEGER ?{([^}]+)}$");
-			public static Regex withConstraint = new Regex(@"(.+)\\(([^)]+)\\)$");
+			public static Regex withConstraint = new Regex(@"^(?<type>OBJECT IDENTIFIER|OCTET STRING|\w+) \((?<cons>.+)\)$");
 			public static Regex sequenceOf = new Regex(@"^SEQUENCE OF (.+)$");
         }
 	}
@@ -60,7 +60,7 @@ public class Expressions
 		public static Regex standardType = new Regex("^(?<name>\\w+) ::= (?:\\[(?<INBO>[^\\]]+)\\] )?(?:(?<ie>(IMPLICIT|EXPLICIT)) )?(?<type>OBJECT IDENTIFIER|OCTET STRING|[A-Za-z0-9]+) (?:\\((?<range>.*?)\\) )?");
 		public static Regex sequenceType = new Regex("^(?<name>\\w+) ::= SEQUENCE {(?<content>[^}]+)}");
 		public static Regex choiceType = new Regex("^(?<name>\\w+) ::= CHOICE {(?<content>[^}]+)}");
-		public static Regex syntax = new Regex("^(?<name>[^ ]+) (?<type>OBJECT IDENTIFIER|OCTET STRING|\\w+)(?: \\((?<cons>[^)]+)\\))?$");
+		public static Regex syntax = new Regex("^(?<name>[^ ]+) (?<type>OBJECT IDENTIFIER|OCTET STRING|\\w+)(?: \\((?<cons>.+)\\))?$");
 
 		public class Ranges
         {

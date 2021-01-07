@@ -6,10 +6,10 @@ using System.Text.RegularExpressions;
 public class Parser
 {
     private ASPFile file;
-	public Parser(ASPFile f)
-	{
+    public Parser(ASPFile f)
+    {
         file = f;
-	}
+    }
 
     public void parse(string input)
     {
@@ -39,7 +39,7 @@ public class Parser
             }
         }
         str = input;
-        tags = new List<Tuple<Regex, Action<Match>>>(new Tuple<Regex, Action<Match>>[]{  
+        tags = new List<Tuple<Regex, Action<Match>>>(new Tuple<Regex, Action<Match>>[]{
             new Tuple<Regex, Action<Match>>(Expressions.ObjectType.tag, new Action<Match>(parseObjectType)),
             new Tuple<Regex, Action<Match>>(Expressions.ObjectId.tag, new Action<Match>(parseObjectId)),
 
@@ -75,7 +75,7 @@ public class Parser
     private void parseSequenceType(Match match)
     {
         Dictionary<string, IType> members = new Dictionary<string, IType>();
-        foreach(string el in match.Groups["content"].Value.Split(","))
+        foreach (string el in match.Groups["content"].Value.Split(","))
         {
             Match syntaxMatch = Expressions.Types.syntax.Match(el.Trim());
             IType baseType = file.fetchType(syntaxMatch.Groups["type"].Value);
@@ -101,7 +101,7 @@ public class Parser
             string fileName = importMatch.Groups[2].Value + ".txt";
             if (File.Exists(fileName))
             {
-                ASPFile importFile = new ASPFile(fileName);
+                ASPFile importFile = new ASPFile(File.ReadAllText(fileName));
                 foreach (string import in importMatch.Groups[1].Value.Trim().Split(","))
                 {
                     ITreeNode node = importFile.findNode(import.Trim());
@@ -131,13 +131,13 @@ public class Parser
     private IType parseObjectTypeSyntax(string syntax)
     {
         Match syntaxMatch = Expressions.ObjectType.Syntaxes.enumInt.Match(syntax);
-        if(syntaxMatch.Success)
+        if (syntaxMatch.Success)
         {
             Dictionary<string, long> enumDict = new Dictionary<string, long>();
             foreach (string spl in syntaxMatch.Groups[1].Value.Split(","))
             {
                 string entry = spl.Trim();
-                enumDict.Add(entry.Substring(0, entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(")+1, entry.IndexOf(")") - entry.IndexOf("(")-1)));
+                enumDict.Add(entry.Substring(0, entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(") + 1, entry.IndexOf(")") - entry.IndexOf("(") - 1)));
             }
             return new EnumIntegerType(enumDict);
         }
@@ -145,7 +145,9 @@ public class Parser
         syntaxMatch = Expressions.ObjectType.Syntaxes.withConstraint.Match(syntax);
         if (syntaxMatch.Success)
         {
-            throw new NotImplementedException();
+            IType baseType = file.fetchType(syntaxMatch.Groups["type"].Value);
+            var cons = parseConstraint(syntaxMatch.Groups["cons"].Value);
+            return baseType.derive(cons.Item1, cons.Item2);
         }
 
         syntaxMatch = Expressions.ObjectType.Syntaxes.sequenceOf.Match(syntax);
@@ -154,7 +156,7 @@ public class Parser
             return new SequenceOfType(file.fetchType(syntaxMatch.Groups[1].Value));
         }
 
-        return null;
+        return file.fetchType(syntax);
     }
 
     private void parseObjectId(Match match)
@@ -182,5 +184,23 @@ public class Parser
             }
         }
         return null;
+    }
+
+    public void parseAnyType(string line)
+    {
+        List<Tuple<Regex, Action<Match>>> tags = new List<Tuple<Regex, Action<Match>>>(new Tuple<Regex, Action<Match>>[]{
+            new Tuple<Regex, Action<Match>>(Expressions.Types.choiceType, new Action<Match>(parseChoiceType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.sequenceType, new Action<Match>(parseSequenceType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.standardType, new Action<Match>(parseStandardType)),
+        });
+        foreach (var tag in tags)
+        {
+            Match match = tag.Item1.Match(line);
+            if (match.Success)
+            {
+                tag.Item2(match);
+                return;
+            }
+        }
     }
 }

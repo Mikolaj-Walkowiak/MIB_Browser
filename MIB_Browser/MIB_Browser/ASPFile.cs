@@ -48,11 +48,7 @@ public class ASPFile
     public ASPFile(string file)
     {
         setParents(root);
-        Console.WriteLine("parsing file " + file);
-        string input = File.ReadAllText(file);
-
-        new Parser(this).parse(preprocessFile(input));
-        Console.WriteLine("file " + file + " done");
+        new Parser(this).parse(preprocessFile(file));
     }
 
     private string preprocessFile(string file)

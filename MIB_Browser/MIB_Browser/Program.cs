@@ -22,7 +22,8 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "start" && command.Length == 1)
                 {
-                    file = new ASPFile("RFC1213-MIB.txt");
+                    Console.WriteLine("parsing file RFC1213 - MIB.txt");
+                    file = new ASPFile(File.ReadAllText("RFC1213-MIB.txt"));
                     node = file.root;
                 }
                 else if (command[0] == "test" && command.Length == 1)
@@ -45,7 +46,8 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "parse" && command.Length == 2)
                 {
-                    file = new ASPFile(command[1]);
+                    Console.WriteLine("parsing file " + command[1]);
+                    file = new ASPFile(File.ReadAllText(command[1]));
                     node = file.root;
                 }
                 else if (command[0] == "cd" && command.Length == 2)
@@ -72,6 +74,21 @@ namespace MIB_Browser
                 else if (command[0] == "info" && command.Length == 1)
                 {
                     printInfo(node);
+                }
+                else if (command[0] == "new" && command.Length == 1)
+                {
+                    file = new ASPFile("");
+                    node = file.root;
+                }
+                else if (command[0] == "def" && command.Length > 1)
+                {
+                    string line = string.Join(' ', command.AsSpan(1, command.Length - 1).ToArray());
+                    new Parser(file).parseAnyType(line);
+                }
+                else if (command[0] == "encode" && command.Length > 2)
+                {
+                    string value = string.Join(' ', command.AsSpan(2, command.Length - 2).ToArray());
+                    Console.WriteLine(file.fetchType(command[1]).encode(value));
                 }
                 else Console.WriteLine("unknown command");
             }
