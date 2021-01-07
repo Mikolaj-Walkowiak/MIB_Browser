@@ -152,6 +152,40 @@ public class Coder
         return encodedMsg;
     }
 
+    public static String LocationHelper (string loc)
+    {
+        // Convert.ToString(Int64.Parse(loc[1]), 2).PadLeft(5, '0');
+        string toRet = "";
+        long addr = Int64.Parse(loc);
+        if (addr < 32)
+        {
+            toRet = Convert.ToString(addr, 2).PadLeft(5, '0');
+        }
+        else
+        {
+            Boolean notProudOfThis = false;
+            toRet = "11111";
+            string bigBoy = Convert.ToString(addr, 2);
+            string encoded = "";
+            for (int i = 1; i <bigBoy.Length + 1; ++i)
+            {
+                encoded = bigBoy[bigBoy.Length - i] + encoded;
+                if(i%7 == 0)
+                {
+                    if (notProudOfThis) { encoded = "0" + encoded; }
+                    else { encoded = "1" + encoded; }
+                }
+            }
+            while ((encoded.Length + 1) % 8 != 0) { encoded = "0" + encoded; }
+            if (!notProudOfThis) { encoded = "0" + encoded; }
+            else { encoded = "1" + encoded; }
+            toRet = toRet + encoded;
+        }
+
+
+        return toRet;
+    }
+
     public ObjectType Encode(ObjectType toEncode, string value)
     {
         string encodedMsg = "";
@@ -192,7 +226,7 @@ public class Coder
             {
                 encodedMsg = "11" + PC[tmp.parentType];
             }
-                string binary = Convert.ToString(Int64.Parse(loc[1]), 2).PadLeft(5, '0');
+                string binary = LocationHelper(loc[1]);
                 encodedMsg = encodedMsg + binary;
             }
             else
