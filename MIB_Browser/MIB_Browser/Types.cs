@@ -47,6 +47,6 @@ public static class Types
 		{
 			return types[Name];
 		}
-		return new Constraint(false,false,"negro", "-2137", "2137",null); //shouldn't be possible
+		return new Constraint(false,false,"INTEGER", "-100", "100","APLICATION 4"); //shouldn't be possible
     }
 }

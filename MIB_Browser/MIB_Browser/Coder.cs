@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+using System.Linq;
 
 public static class Coder
 {
@@ -39,6 +39,14 @@ public static class Coder
         {"CHARACTER STRING",29 },
         {"BMPString",30 }
     };
+    private static Dictionary<String, String> PC = new Dictionary<String, String>() // only the ones used in presentation
+    {
+        {"INTEGER","0" },
+        {"NULL","0" },
+        {"OCTET STRING","1" }, // 2hard4me
+        {"SEQUENCE","1" },
+        {"SEQUENCE OF","1" }
+    };
 
     public static string EncodeToBono(string value)
     {
@@ -67,7 +75,10 @@ public static class Coder
                 toRet = '0' + toRet;
             }
         }
-        return toRet;
+        //toRet = Convert.ToString(Convert.ToInt64(toRet.ToString(), 16), 2).PadLeft(4, '0');
+        var s = String.Join("",
+          toRet.Select(x => Convert.ToString(Convert.ToInt32(x + "", 16), 2).PadLeft(4, '0')));
+        return s;
     }
     public static Boolean CheckConstraints(string type, string value)
     {
@@ -87,21 +98,46 @@ public static class Coder
         }
         return true;
     }
+    public static string EncodeHelper(string type, string value)
+    {
+        string encodedMsg = "";
+        if (types.ContainsKey(type))
+        {
+            int typeIdentyfier = types[type];
+
+            if (typeIdentyfier == 2)
+            {
+                string binary = EncodeToBono(value);
+                int length = binary.Length / 8;
+                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                encodedMsg = encodedMsg + binaryLen;
+                encodedMsg = encodedMsg + binary;
+                return encodedMsg;
+
+            }
+        }
+        return encodedMsg;
+    }
+
+
+
+
 
     public static ObjectType Encode(ObjectType toEncode, string value)
     {
         string encodedMsg = "";
         string type = toEncode.syntax;
         if (!CheckConstraints(type, value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return toEncode; }
-        if (types.ContainsKey(type)) {
+
+        if (types.ContainsKey(type)) { //basic types
             int typeIdentyfier = types[type];
-            encodedMsg = "000"; //TODO 3RD BIT NEEDS TO BE CHANGED ACCORDING TO IT BEEING PRIMITIVE/CONSTRUCTED
+            encodedMsg = "00" + PC[type];
             string binary = Convert.ToString(typeIdentyfier, 2).PadLeft(5, '0');
             encodedMsg = encodedMsg + binary;
             if( typeIdentyfier == 2)
             {
-                binary = EncodeToBono(value); // TODO change to binary lol
-                int length = binary.Length / 2;
+                binary = EncodeToBono(value);
+                int length = binary.Length / 8;
                 string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
                 encodedMsg = encodedMsg + binaryLen;
                 encodedMsg = encodedMsg + binary;
@@ -109,6 +145,33 @@ public static class Coder
 
             }
         }
+        else
+        {
+            Constraint tmp = Types.GetConstraints(type);
+            string[] loc = tmp.location.Split(' ');
+            if(loc[0] == "APLICATION")// TODO add other types
+            {
+                encodedMsg = "01" + PC[tmp.parentType];
+                string binary = Convert.ToString(Int64.Parse(loc[1]), 2).PadLeft(5, '0');
+                encodedMsg = encodedMsg + binary;
+            }
+            if (tmp.isExplicit)
+            {
+                string exp = EncodeHelper(tmp.parentType, value);
+                int length = exp.Length / 8;
+                string binaryLen = Convert.ToString(length, 2).PadLeft(8, '0');
+                encodedMsg = encodedMsg + binaryLen + exp;
+            }
+            else
+            {
+                encodedMsg = encodedMsg + EncodeHelper(tmp.parentType, value);
+            }
+
+
+            toEncode.value = encodedMsg;
+
+        }
+
 
         return toEncode;
     }
