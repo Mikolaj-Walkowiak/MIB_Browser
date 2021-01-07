@@ -90,7 +90,12 @@ public class Parser
         string[] addr = match.Groups["INBO"].Value.Split(" ");
         var cons = parseConstraint(match.Groups["range"].Value);
         if (cons == null) file.AddType(match.Groups["name"].Value, baseType);
-        else file.AddType(match.Groups["name"].Value, baseType.derive(cons.Item1, cons.Item2, addr[0], addr[1], match.Groups["ie"].Value));
+        else file.AddType(match.Groups["name"].Value, baseType.derive(
+            cons.Item1,
+            cons.Item2, 
+            addr.Length == 2 ? addr[0] : null, 
+            addr.Length == 2 ? addr[1] : null, 
+            match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null));
     }
 
     private void parseImport(Match match)
@@ -179,7 +184,7 @@ public class Parser
             if (rangeMatch.Success)
             {
                 min = Int32.Parse(rangeMatch.Groups[1].Value);
-                max = rangeMatch.Groups.Count > 1 ? Int32.Parse(rangeMatch.Groups[1].Value) : min;
+                max = rangeMatch.Groups.Count > 1 ? Int32.Parse(rangeMatch.Groups[2].Value) : min;
                 return new Tuple<long, long>(min, max);
             }
         }
