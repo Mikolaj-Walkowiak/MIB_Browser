@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 namespace MIB_Browser
 {
@@ -28,17 +29,14 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "test" && command.Length == 1)
                 {
-                    /*ObjectType objType = (ObjectType)node;
-                    objType = new Coder(file).Encode(objType, "Jones");
-                    Console.WriteLine(node.getName() + "(" + node.getId() + "): OBJECT TYPE");
-                    Console.WriteLine("path: " + String.Join('.', getPath(node)));
-                    Console.WriteLine("syntax: " + objType.syntax);
-                    Console.WriteLine("access: " + objType.access);
-                    Console.WriteLine("status: " + objType.status);
-                    Console.WriteLine("value: " + objType.value);
-                    Console.WriteLine("description: " + objType.description);
-                    Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");*/
-
+                    var str = new IntegerType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("5");
+                    string hex = String.Concat(
+                      Regex.Matches(str, "....").Cast<Match>()
+                      .Select(m => Convert.ToInt32(m.Value, 2)
+                      .ToString("x1"))
+                    );
+                    Console.WriteLine(str);
+                    Console.WriteLine(hex);
                 }
                 else if (command[0] == "cls" && command.Length == 1)
                 {
