@@ -45,7 +45,9 @@ namespace MIB_Browser
                         ObjectType objType = (ObjectType)node;
                         Console.WriteLine("Node type is: " + objType.getType());
                         Console.WriteLine("The range is: " + objType.getConstraints());
-                        objType.encode("3");
+                        Console.WriteLine("What to encode:");
+                        string toEncode = Console.ReadLine();
+                        objType.encode(toEncode);
                     }
                     else { Console.WriteLine("Node is not encodeable"); }
                 }
