@@ -61,6 +61,7 @@ public class Expressions
 		public static Regex sequenceType = new Regex("^(?<name>\\w+) ::= SEQUENCE {(?<content>[^}]+)}");
 		public static Regex choiceType = new Regex("^(?<name>\\w+) ::= CHOICE {(?<content>[^}]+)}");
 		public static Regex enumIntType = new Regex(@"^(?<name>\w+) ::= (?:\[(?<INBO>[^\]]+)\] )?(?:(?<ie>(IMPLICIT|EXPLICIT)) )?INTEGER {(?<content>[^}]+)}");
+		public static Regex sequenceOfType = new Regex(@"^(?<name>\w+) ::= SEQUENCE OF (?<type>[^ ]+)(?: \\((?<cons>.+)\\))?");
 		public static Regex syntax = new Regex("^(?<name>[^ ]+) (?<type>OBJECT IDENTIFIER|OCTET STRING|\\w+)(?: \\((?<cons>.+)\\))?$");
 
 		public class Ranges
@@ -75,6 +76,12 @@ public class Expressions
 				sizeValue,
 				sizeRange
 			};
+		}
+
+		public class Sequences
+        {
+			public static Regex inputSplit = new Regex(@"([a-zA-Z0-9]+) ([^{},]+|{(?>{(?<c>)|[^{}]+|}(?<-c>))*(?(c)(?!))})");
+			public static Regex seqOfSplit = new Regex(@"[^{},]+|{(?>{(?<c>)|[^{}]+|}(?<-c>))*(?(c)(?!))}");
 		}
 	}
 

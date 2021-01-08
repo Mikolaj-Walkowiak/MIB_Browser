@@ -38,19 +38,6 @@ namespace MIB_Browser
                     Console.WriteLine(str);
                     Console.WriteLine(hex);
                 }
-                else if (command[0] == "encode" && command.Length == 1)
-                {
-                    if (node.GetType() == typeof(ObjectType))
-                    {
-                        ObjectType objType = (ObjectType)node;
-                        Console.WriteLine("Node type is: " + objType.getType());
-                        Console.WriteLine("The range is: " + objType.getConstraints());
-                        Console.WriteLine("What to encode:");
-                        string toEncode = Console.ReadLine();
-                        objType.encode(toEncode);
-                    }
-                    else { Console.WriteLine("Node is not encodeable"); }
-                }
                 else if (command[0] == "cls" && command.Length == 1)
                 {
                     Console.Clear();
@@ -99,7 +86,33 @@ namespace MIB_Browser
                 else if (command[0] == "encode" && command.Length > 2)
                 {
                     string value = string.Join(' ', command.AsSpan(2, command.Length - 2).ToArray());
-                    Console.WriteLine(file.fetchType(command[1]).encode(value));
+                    string encoded = file.fetchType(command[1]).encode(value);
+                    if (encoded != null)
+                    {
+                        Console.WriteLine(Regex.Replace(encoded, ".{8}", "$0 "));
+                        var hex = string.Join("       ",
+                                Enumerable.Range(0, encoded.Length / 8).Select(i => Convert.ToByte(encoded.Substring(i * 8, 8), 2).ToString("X2")));
+                        Console.WriteLine(hex);
+                    }
+                    else Console.WriteLine("invalid input");
+                }
+                else if (command[0] == "encode-node" && command.Length > 1)
+                {
+                    if (node.GetType() == typeof(ObjectType))
+                    {
+                        ObjectType objType = (ObjectType)node;
+                        string toEncode = string.Join(' ', command.AsSpan(1, command.Length - 1).ToArray());
+                        string encoded = objType.type.encode(toEncode);
+                        if(encoded != null)
+                        {
+                            Console.WriteLine(Regex.Replace(encoded, ".{8}", "$0 "));
+                            var hex = string.Join("       ",
+                                    Enumerable.Range(0, encoded.Length / 8).Select(i => Convert.ToByte(encoded.Substring(i * 8, 8), 2).ToString("X2")));
+                            Console.WriteLine(hex);
+                        }
+                        else Console.WriteLine("invalid input");
+                    }
+                    else Console.WriteLine("node not encodable");
                 }
                 else Console.WriteLine("unknown command");
             }
@@ -151,13 +164,6 @@ namespace MIB_Browser
                 Console.WriteLine("path: " + String.Join('.', getPath(node)));
                 Console.WriteLine("access: " + objType.access);
                 Console.WriteLine("status: " + objType.status);
-                Console.WriteLine("value: " + objType.value);
-                string hex = String.Concat(
-                      Regex.Matches(objType.value, "....").Cast<Match>()
-                      .Select(m => Convert.ToInt32(m.Value, 2)
-                      .ToString("x1"))
-                    );
-                Console.WriteLine("value(hex: " + hex);
                 Console.WriteLine("description: " + objType.description);
                 Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");
             }

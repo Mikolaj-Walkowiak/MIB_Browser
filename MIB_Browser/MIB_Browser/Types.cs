@@ -42,7 +42,7 @@ public class IntegerType : IType
     {
         string encodedMsg = "";
 
-        if (!check(value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return null; }
+        if (!check(value)) { return null; }
 
         if (classId == addr && addr == isExplicit && isExplicit == null)
         { //basic types
@@ -158,11 +158,69 @@ public class EnumIntegerType : IntegerType
 
     public override string encode(string value)
     {
+        if (!check(value)) { return null; }
         if (Int32.TryParse(value, out int num)) return base.encode(value);
         else return base.encode(enumDict[value].ToString());
     }
 
     public override IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class BoolType : IType
+{
+    public string classId;
+    public string addr;
+    public string isExplicit;
+    public BoolType(string classId, string addr, string isExplicit)
+    {
+        this.classId = classId;
+        this.addr = addr;
+        this.isExplicit = isExplicit;
+    }
+
+    public bool check(string value)
+    {
+        return new string[] { "TRUE", "FALSE" }.Contains(value);
+    }
+    public string decode(string value)
+    {
+        throw new NotImplementedException();
+    }
+
+    public string encode(string value)
+    {
+        if (!check(value)) { return null; }
+        string encodedMsg = "";
+        if (classId == "APPLICATION")
+        {
+            encodedMsg = "010"; //PC[tmp.parentType];
+        }
+        else if (classId == "CONTEXT-SPECIFIC")
+        {
+            encodedMsg = "100";
+        }
+        else if (classId == "PRIVATE")
+        {
+            encodedMsg = "110";
+        }
+        else
+        {
+            encodedMsg = "000";
+        }
+        string binAddr = addr != null ? Utils.LocationHelper(addr) : "00001";
+        string val = value == "FALSE" ? "00000000" : "11111111";
+        return encodedMsg + binAddr + "00000001" + val;
+    }
+
+    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    {
+        return new BoolType(classId, addr, isExplicit);
+    }
+
+    public string getRange()
     {
         throw new NotImplementedException();
     }
@@ -196,6 +254,8 @@ public class StringType : IType
 
     public string encode(string value)
     {
+        if (!check(value)) { return null; }
+
         string encodedMsg = "";
 
         if (!check(value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return null; }
@@ -327,17 +387,17 @@ public class OIDType : IType
 
     public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        throw new NotImplementedException();
+        return new OIDType(min, max, classId, addr, isExplicit);
     }
 
 
     public string encode(string value)
     {
+        if (!check(value)) { return null; }
+
         string encodedMsg = "";
 
-        if (!check(value)) { Console.WriteLine("Error in encoding, value doesn't match constraints"); return null; }
-
-        if (classId == addr && addr == isExplicit && isExplicit == null)
+        if (classId == null && addr == null && isExplicit == null)
         { //basic types
             int typeIdentyfier = 6;
             encodedMsg = "00" + "0";
@@ -421,10 +481,19 @@ public class OIDType : IType
 
 public class NullType : IType
 {
+    public string classId;
+    public string addr;
+
+    public NullType(string classId, string addr)
+    {
+        this.classId = classId;
+        this.addr = addr;
+    }
+
     public string getRange() { return "is Null"; }
     public bool check(string value)
     {
-        throw new NotImplementedException();
+        return true;
     }
 
     public string decode(string value)
@@ -434,12 +503,30 @@ public class NullType : IType
 
     public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        throw new NotImplementedException();
+        return new NullType(classId, addr);
     }
 
     public string encode(string value)
     {
-        throw new NotImplementedException();
+        string encodedMsg = "";
+        if (classId == "APPLICATION")
+        {
+            encodedMsg = "010"; //PC[tmp.parentType];
+        }
+        else if (classId == "CONTEXT-SPECIFIC")
+        {
+            encodedMsg = "100";
+        }
+        else if (classId == "PRIVATE")
+        {
+            encodedMsg = "110";
+        }
+        else
+        {
+            encodedMsg = "000";
+        }
+        string binAddr = addr != null ? Utils.LocationHelper(addr) : "00101";
+        return encodedMsg + binAddr + "00000000";
     }
 }
 
@@ -455,14 +542,13 @@ public class SequenceType : IType
 
     public bool check(string value)
     {
-        string[] elements = value.Substring(1, value.Length - 2).Split(",");
-        for (int i = 0; i < elements.Length; ++i) elements[i] = elements[i].Trim();
+        value = value.Substring(1, value.Length - 2);
+        List<Tuple<string, string>> elements = new List<Tuple<string, string>>();
+        for (Match valueMatch = Expressions.Types.Sequences.inputSplit.Match(value); valueMatch.Success; valueMatch = valueMatch.NextMatch())
+            elements.Add(new Tuple<string, string>(valueMatch.Groups[1].Value.Trim(), valueMatch.Groups[2].Value.Trim()));
         List<string> encoded = new List<string>();
-        foreach (string el in elements)
-        {
-            string[] elem = el.Split(" ");
-            if(!members.ContainsKey(elem[0]) || !members[elem[0]].check(elem[1])) return false;
-        }
+        foreach (Tuple<string, string> el in elements) 
+            if(!members.ContainsKey(el.Item1)) return false;
         return true;
     }
 
@@ -478,16 +564,21 @@ public class SequenceType : IType
 
     public string encode(string value)
     {
-        string[] elements = value.Substring(1, value.Length-2).Split(",");
-        for (int i = 0; i < elements.Length; ++i) elements[i] = elements[i].Trim();
+        if (!check(value)) { return null; }
+
+        value = value.Substring(1, value.Length - 2);
+        List<Tuple<string, string>> elements = new List<Tuple<string, string>>();
+        for (Match valueMatch = Expressions.Types.Sequences.inputSplit.Match(value); valueMatch.Success; valueMatch = valueMatch.NextMatch())
+            elements.Add(new Tuple<string, string>(valueMatch.Groups[1].Value.Trim(), valueMatch.Groups[2].Value.Trim()));
         List<string> encoded = new List<string>();
-        foreach(string el in elements)
+        foreach (Tuple<string, string> el in elements)
         {
-            string[] elem = el.Split(" ");
-            encoded.Add(members[elem[0]].encode(elem[1]));
+            string enc = members[el.Item1].encode(el.Item2);
+            if (enc != null) encoded.Add(enc);
+            else return null;
         }
         string children = string.Join("", encoded);
-        return "0011000" + Utils.SizeHelper(children.Length / 8) + children;
+        return "00110000" + Utils.SizeHelper(children.Length / 8) + children;
     }
 }
 
@@ -503,7 +594,7 @@ public class SequenceOfType : IType
 
     public bool check(string value)
     {
-        throw new NotImplementedException();
+        return true;
     }
 
     public string decode(string value)
@@ -518,7 +609,21 @@ public class SequenceOfType : IType
 
     public string encode(string value)
     {
-        throw new NotImplementedException();
+        if (!check(value)) { return null; }
+
+        value = value.Substring(1, value.Length - 2);
+        List<string> elements = new List<string>();
+        for (Match valueMatch = Expressions.Types.Sequences.seqOfSplit.Match(value); valueMatch.Success; valueMatch = valueMatch.NextMatch())
+            if(valueMatch.Value.Trim().Length > 0) elements.Add(valueMatch.Value.Trim());
+        List<string> encoded = new List<string>();
+        foreach (string el in elements)
+        {
+            string enc = baseType.encode(el);
+            if (enc != null) encoded.Add(enc);
+            else return null;
+        }
+        string children = string.Join("", encoded);
+        return "00110000" + Utils.SizeHelper(children.Length / 8) + children;
     }
 }
 
@@ -534,7 +639,9 @@ public class ChoiceType : IType
 
     public bool check(string value)
     {
-        throw new NotImplementedException();
+        if (value.IndexOf(" ") == -1) return false;
+        string choiceName = value.Substring(0, value.IndexOf(" "));
+        return members.ContainsKey(choiceName);
     }
 
     public string decode(string value)
@@ -549,6 +656,10 @@ public class ChoiceType : IType
 
     public string encode(string value)
     {
-        throw new NotImplementedException();
+        if (!check(value)) return null;
+        string[] spl = value.Split(" ");
+        string choiceName = spl[0].Trim();
+        string choiceValue = string.Join(' ', spl.AsSpan(1, spl.Length - 1).ToArray());
+        return members[choiceName].encode(choiceValue);
     }
 }

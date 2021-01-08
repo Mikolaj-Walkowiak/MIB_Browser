@@ -7,7 +7,6 @@ public class ObjectType : ITreeNode
 	public string access;
 	public string status;
 	public string description;
-    public string value;
 
     public int id;
     public string name;
@@ -16,10 +15,6 @@ public class ObjectType : ITreeNode
     public IType getType()
     {
         return type;
-    }
-    public void encode(string val)
-    {
-        value = type.encode(val);
     }
     public string getConstraints()
     {
@@ -32,10 +27,6 @@ public class ObjectType : ITreeNode
     public string getName()
     {
         return name;
-    }
-    public string getValue()
-    {
-        return value;
     }
     public Dictionary<int, ITreeNode> getChildren()
     {
