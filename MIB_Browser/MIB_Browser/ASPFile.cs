@@ -41,7 +41,7 @@ public class ASPFile
     {
         ["INTEGER"] = new IntegerType(Int64.MinValue, Int64.MaxValue, null, null, null),
         ["OCTET STRING"] = new StringType(0, Int64.MaxValue, null, null, null),
-        ["OBJECT IDENTIFIER"] = new OIDType(),
+        ["OBJECT IDENTIFIER"] = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null),
         ["NULL"] = new NullType()
     };
 
