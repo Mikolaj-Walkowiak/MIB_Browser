@@ -37,6 +37,34 @@ public static class Utils
           toRet.Select(x => Convert.ToString(Convert.ToInt32(x + "", 16), 2).PadLeft(4, '0')));
         return s;
     }
+    public static string OIDHelper(long len)
+    {
+        string toRet = "";
+        if (len < 128)
+        {
+            toRet = Convert.ToString(len, 2).PadLeft(8, '0');
+        }
+        else
+        {
+            toRet = "0";
+            string bigBoy = Convert.ToString(len, 2);
+            string encoded = "";
+            for (int i = 1; i < bigBoy.Length + 1; ++i)
+            {
+                encoded = bigBoy[bigBoy.Length - i] + encoded;
+                if (i % 7 == 0)
+                {
+                    encoded = "1" + encoded;
+                }
+            }
+            while ((encoded.Length + 1) % 8 != 0) { encoded = "0" + encoded; }
+            encoded = "0" + encoded;
+            toRet = toRet + encoded;
+        }
+
+        return toRet;
+
+    }
     public static String SizeHelper(long len)
     {
         //Convert.ToString(length, 2).PadLeft(8, '0');
@@ -102,7 +130,6 @@ public static class Utils
         }
         if (typeIdentyfier == 6)
         {
-            encodedMsg = "0";
             string[] numbers = Regex.Split(value, @"\D+");
             var temp = new List<string>();
             foreach (var s in numbers)
@@ -115,22 +142,22 @@ public static class Utils
             if (numbers.Length > 2)
             {
                 i += int.Parse(numbers[1]);
-                encodedMsg = encodedMsg + Convert.ToString(i, 2).PadLeft(7, '0');
+                encodedMsg = encodedMsg + OIDHelper(i);
                 for (int j = 2; j < numbers.Length; ++j)
                 {
                     encodedMsg = encodedMsg + "0";
-                    encodedMsg = encodedMsg + Convert.ToString(int.Parse(numbers[j]), 2).PadLeft(7, '0');
+                    encodedMsg = encodedMsg + OIDHelper(Convert.ToInt64(numbers[j]));
                 }
             }
             else if (numbers.Length == 2)
             {
                 i += int.Parse(numbers[1]);
-                encodedMsg = encodedMsg + Convert.ToString(i, 2).PadLeft(7, '0');
+                encodedMsg = encodedMsg + OIDHelper(i);
             }
 
             else
             {
-                encodedMsg = encodedMsg + Convert.ToString(i, 2).PadLeft(7, '0');
+                encodedMsg = encodedMsg + OIDHelper(i);
             }
             long length = encodedMsg.Length / 8;
             string binaryLen = SizeHelper(length);
