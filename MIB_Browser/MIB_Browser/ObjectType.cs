@@ -13,6 +13,18 @@ public class ObjectType : ITreeNode
     public string name;
 	public ITreeNode parent;
 	public Dictionary<int, ITreeNode> children = new Dictionary<int, ITreeNode>();
+    public IType getType()
+    {
+        return type;
+    }
+    public void encode(string val)
+    {
+        value = type.encode(val);
+    }
+    public string getConstraints()
+    {
+        return "(" + type.getRange() + ")";
+    }
     public int getId()
     {
         return id;

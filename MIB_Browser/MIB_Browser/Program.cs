@@ -38,6 +38,17 @@ namespace MIB_Browser
                     Console.WriteLine(str);
                     Console.WriteLine(hex);
                 }
+                else if (command[0] == "encode" && command.Length == 1)
+                {
+                    if (node.GetType() == typeof(ObjectType))
+                    {
+                        ObjectType objType = (ObjectType)node;
+                        Console.WriteLine("Node type is: " + objType.getType());
+                        Console.WriteLine("The range is: " + objType.getConstraints());
+                        objType.encode("3");
+                    }
+                    else { Console.WriteLine("Node is not encodeable"); }
+                }
                 else if (command[0] == "cls" && command.Length == 1)
                 {
                     Console.Clear();
@@ -139,6 +150,12 @@ namespace MIB_Browser
                 Console.WriteLine("access: " + objType.access);
                 Console.WriteLine("status: " + objType.status);
                 Console.WriteLine("value: " + objType.value);
+                string hex = String.Concat(
+                      Regex.Matches(objType.value, "....").Cast<Match>()
+                      .Select(m => Convert.ToInt32(m.Value, 2)
+                      .ToString("x1"))
+                    );
+                Console.WriteLine("value(hex: " + hex);
                 Console.WriteLine("description: " + objType.description);
                 Console.WriteLine(node.getChildren().Count == 1 ? "1 child" : node.getChildren().Count + " children");
             }

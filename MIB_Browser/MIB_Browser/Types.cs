@@ -9,6 +9,7 @@ public interface IType
     string encode(string value);
     string decode(string value);
     IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null);
+    string getRange();
 }
 
 public class IntegerType : IType
@@ -19,6 +20,7 @@ public class IntegerType : IType
     public string addr;
     public string isExplicit;
 
+    public string getRange() { return min + ", " + max; }
     public IntegerType(long min, long max, string classId, string addr, string isExplicit)
     {
         this.min = min;
@@ -168,6 +170,7 @@ public class EnumIntegerType : IntegerType
 
 public class StringType : IType
 {
+    public string getRange() { return min + ", " + max; }
     public long min { get; } = 0;
     public long max { get; } = Int64.MaxValue;
     public string classId;
@@ -289,6 +292,7 @@ public class StringType : IType
 
 public class OIDType : IType
 {
+    public string getRange() { return min + ", " + max; }
     public long min { get; } = 0;
     public long max { get; } = Int64.MaxValue;
     public string classId;
@@ -417,6 +421,7 @@ public class OIDType : IType
 
 public class NullType : IType
 {
+    public string getRange() { return "is Null"; }
     public bool check(string value)
     {
         throw new NotImplementedException();
@@ -440,6 +445,7 @@ public class NullType : IType
 
 public class SequenceType : IType
 {
+    public string getRange() { return "is Sequence"; }
     Dictionary<string, IType> members;
 
     public SequenceType(Dictionary<string, IType> members)
@@ -470,6 +476,7 @@ public class SequenceType : IType
 
 public class SequenceOfType : IType
 {
+    public string getRange() { return "is Sequence"; }
     IType baseType;
 
     public SequenceOfType(IType b)
@@ -500,6 +507,7 @@ public class SequenceOfType : IType
 
 public class ChoiceType : IType
 {
+    public string getRange() { return "is Choice"; }
     Dictionary<string, IType> members;
 
     public ChoiceType(Dictionary<string, IType> members)

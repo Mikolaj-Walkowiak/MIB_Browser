@@ -7,7 +7,10 @@ public class ObjectId : ITreeNode
     public string name { get; set; }
     public ITreeNode parent { get; set; }
     public Dictionary<int, ITreeNode> children{ get; set; } = new Dictionary<int, ITreeNode>();
-
+    public IType getType()
+    {
+        return null;
+    }
     public int getId()
     {
         return id;
