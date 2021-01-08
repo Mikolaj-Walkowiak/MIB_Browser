@@ -29,7 +29,7 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "test" && command.Length == 1)
                 {
-                    var str = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("{ISO(201)}");
+                    var str = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("{ISO(5)}");
                     string hex = String.Concat(
                       Regex.Matches(str, "....").Cast<Match>()
                       .Select(m => Convert.ToInt32(m.Value, 2)
