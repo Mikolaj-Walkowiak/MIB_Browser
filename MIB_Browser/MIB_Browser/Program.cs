@@ -81,7 +81,7 @@ namespace MIB_Browser
                 else if (command[0] == "def" && command.Length > 1)
                 {
                     string line = string.Join(' ', command.AsSpan(1, command.Length - 1).ToArray());
-                    new Parser(file).parseAnyType(line + ' ');
+                    new Parser(file).parseAnyType(Utils.preprocessText(line + ' '));
                 }
                 else if (command[0] == "encode" && command.Length > 2)
                 {

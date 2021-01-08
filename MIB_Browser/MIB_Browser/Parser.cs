@@ -191,11 +191,29 @@ public class Parser
         return null;
     }
 
+    private void parseEnumInt(Match match)
+    {
+        string[] addr = match.Groups["INBO"].Value.Split(" ");
+        Dictionary<string, long> enumDict = new Dictionary<string, long>();
+        foreach (string spl in match.Groups["content"].Value.Split(","))
+        {
+            string entry = spl.Trim();
+            enumDict.Add(entry.Substring(0, entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(") + 1, entry.IndexOf(")") - entry.IndexOf("(") - 1)));
+        }
+        file.AddType(match.Groups["name"].Value, 
+            new EnumIntegerType(enumDict, 
+                addr.Length == 2 ? addr[0] : null,
+                addr.Length == 2 ? addr[1] : null,
+                match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null)
+        );
+    }
+
     public void parseAnyType(string line)
     {
         List<Tuple<Regex, Action<Match>>> tags = new List<Tuple<Regex, Action<Match>>>(new Tuple<Regex, Action<Match>>[]{
             new Tuple<Regex, Action<Match>>(Expressions.Types.choiceType, new Action<Match>(parseChoiceType)),
             new Tuple<Regex, Action<Match>>(Expressions.Types.sequenceType, new Action<Match>(parseSequenceType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.enumIntType, new Action<Match>(parseEnumInt)),
             new Tuple<Regex, Action<Match>>(Expressions.Types.standardType, new Action<Match>(parseStandardType)),
         });
         foreach (var tag in tags)

@@ -135,6 +135,10 @@ public class IntegerType : IType
 
 public class EnumIntegerType : IntegerType
 {
+    public EnumIntegerType(Dictionary<string, long> d, string classId, string addr, string isExplicit) : base(Int64.MinValue, Int64.MaxValue, classId, addr, isExplicit)
+    {
+        enumDict = d;
+    }
     public EnumIntegerType(Dictionary<string, long> d) : base(Int64.MinValue, Int64.MaxValue, null, null, null)
     {
         enumDict = d;

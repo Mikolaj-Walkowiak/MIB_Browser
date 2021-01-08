@@ -205,4 +205,11 @@ public static class Utils
         return toRet;
     }
 
+    public static string preprocessText(string file)
+    {
+        file = Expressions.comment.Replace(file, "");
+        file = Regex.Replace(file, @"\s+", " ");
+        return file;
+    }
+
 }

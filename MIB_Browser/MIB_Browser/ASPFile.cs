@@ -48,14 +48,7 @@ public class ASPFile
     public ASPFile(string file)
     {
         setParents(root);
-        new Parser(this).parse(preprocessFile(file));
-    }
-
-    private string preprocessFile(string file)
-    {
-        file = Expressions.comment.Replace(file, "");
-        file = Regex.Replace(file, @"\s+", " ");
-        return file;
+        new Parser(this).parse(Utils.preprocessText(file));
     }
 
     private void setParents(ITreeNode node)
