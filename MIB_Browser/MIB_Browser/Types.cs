@@ -455,7 +455,15 @@ public class SequenceType : IType
 
     public bool check(string value)
     {
-        throw new NotImplementedException();
+        string[] elements = value.Substring(1, value.Length - 2).Split(",");
+        for (int i = 0; i < elements.Length; ++i) elements[i] = elements[i].Trim();
+        List<string> encoded = new List<string>();
+        foreach (string el in elements)
+        {
+            string[] elem = el.Split(" ");
+            if(!members.ContainsKey(elem[0]) || !members[elem[0]].check(elem[1])) return false;
+        }
+        return true;
     }
 
     public string decode(string value)
@@ -470,7 +478,16 @@ public class SequenceType : IType
 
     public string encode(string value)
     {
-        throw new NotImplementedException();
+        string[] elements = value.Substring(1, value.Length-2).Split(",");
+        for (int i = 0; i < elements.Length; ++i) elements[i] = elements[i].Trim();
+        List<string> encoded = new List<string>();
+        foreach(string el in elements)
+        {
+            string[] elem = el.Split(" ");
+            encoded.Add(members[elem[0]].encode(elem[1]));
+        }
+        string children = string.Join("", encoded);
+        return "0011000" + Utils.SizeHelper(children.Length / 8) + children;
     }
 }
 
