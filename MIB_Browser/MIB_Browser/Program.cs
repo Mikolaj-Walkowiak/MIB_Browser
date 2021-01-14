@@ -29,14 +29,18 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "test" && command.Length == 1)
                 {
-                    var str = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("{ISO(5)}");
-                    string hex = String.Concat(
-                      Regex.Matches(str, "....").Cast<Match>()
-                      .Select(m => Convert.ToInt32(m.Value, 2)
-                      .ToString("x1"))
-                    );
-                    Console.WriteLine(str);
-                    Console.WriteLine(hex);
+                    var str = new IntegerType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("5");
+
+                    //string hex = String.Concat(
+                    //  Regex.Matches(str, "....").Cast<Match>()
+                    //  .Select(m => Convert.ToInt32(m.Value, 2)
+                    //  .ToString("x1"))
+                    //);
+                    //Console.WriteLine(str);
+                    //Console.WriteLine(hex);
+                    //var test = file.decodeType(str);
+                    var test = file.decodeType("0000001010000010000010000101100100000101");
+                    Console.WriteLine(test);
                 }
                 else if (command[0] == "cls" && command.Length == 1)
                 {

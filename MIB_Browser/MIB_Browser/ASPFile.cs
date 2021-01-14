@@ -160,4 +160,95 @@ public class ASPFile
     {
         return types[value];
     }
+    long getLen(string value)
+    {
+        if(value[0] == '0')
+        {
+            var len = value.Substring(1, 7);
+            return Convert.ToInt32(len, 2);
+        }
+        else if (Convert.ToInt32(value.Substring(1, 7), 2) != 0) // EOC type file
+        {
+            var octetCount = Convert.ToInt32(value.Substring(1, 7), 2);
+            var longLen = value.Substring(8, 8 * octetCount);
+            return Convert.ToInt64(longLen, 2);
+        }
+
+        return -1;
+    }
+    public (IType,long) decodeType(string value)
+    {
+        var type = value.Substring(0, 8);
+        var type_num = Convert.ToInt32(type, 2);
+        if(type_num < 31)
+        {
+            var type_toRet = basicTypes[type_num];
+            var restOfTheString = value.Remove(0, 8);
+            var len = getLen(restOfTheString);
+            return (type_toRet, len);
+        }
+        else
+        {
+            var tagID = value.Substring(4, 5);
+            var cla55 = value.Substring(0, 2);
+            if (tagID != "11111")
+            {
+                if (cla55 == "01")
+                {
+                    var type_toRet = applicationTypes[type_num];
+                    var restOfTheString = value.Remove(0, 8);
+                    var len = getLen(restOfTheString);
+                    return (type_toRet, len);
+                }
+                if (cla55 == "10")
+                {
+                    var type_toRet = contextSpecificTypes[type_num];
+                    var restOfTheString = value.Remove(0, 8);
+                    var len = getLen(restOfTheString);
+                    return (type_toRet, len);
+                }
+                if (cla55 == "11")
+                {
+                    var type_toRet = privateTypes[type_num];
+                    var restOfTheString = value.Remove(0, 8);
+                    var len = getLen(restOfTheString);
+                    return (type_toRet, len);
+                }
+            }
+            else
+            {
+                var restOfTheString = value.Remove(0, 8);
+                var longType = "";
+                while (restOfTheString[0] != '0')
+                {
+                    longType = longType + restOfTheString.Substring(1, 7);
+                    restOfTheString = restOfTheString.Remove(0, 8);
+                }
+                longType = longType + restOfTheString.Substring(1, 7);
+
+                if (cla55 == "01")
+                {
+                    var type_toRet = applicationTypes[Convert.ToInt64(longType, 2)];
+                    restOfTheString = value.Remove(0, 8);
+                    var len = getLen(restOfTheString);
+                    return (type_toRet, len);
+                }
+                if (cla55 == "10")
+                {
+                    var type_toRet = contextSpecificTypes[Convert.ToInt64(longType, 2)];
+                    restOfTheString = value.Remove(0, 8);
+                    var len = getLen(restOfTheString);
+                    return (type_toRet, len);
+                }
+                if (cla55 == "11")
+                {
+                    var type_toRet = privateTypes[Convert.ToInt64(longType, 2)];
+                    restOfTheString = value.Remove(0, 8);
+                    var len = getLen(restOfTheString);
+                    return (type_toRet, len);
+                }
+            }            
+         }        
+        return (null,0);
+    }
 }
