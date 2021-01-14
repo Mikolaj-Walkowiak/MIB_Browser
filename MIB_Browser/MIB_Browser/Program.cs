@@ -38,8 +38,8 @@ namespace MIB_Browser
                     //);
                     //Console.WriteLine(str);
                     //Console.WriteLine(hex);
-                    //var test = file.decodeType(str);
-                    var test = file.decodeType("0000001010000010000010000101100100000101");
+                    var test = file.decodeType(str);
+                    //var test = file.decodeType("0000001000000010000010000101100100000101");
                     Console.WriteLine(test);
                 }
                 else if (command[0] == "cls" && command.Length == 1)

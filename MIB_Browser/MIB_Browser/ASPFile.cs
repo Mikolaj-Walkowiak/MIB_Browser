@@ -160,23 +160,25 @@ public class ASPFile
     {
         return types[value];
     }
-    long getLen(string value)
+    (long,string) getLen(string value)
     {
         if(value[0] == '0')
         {
             var len = value.Substring(1, 7);
-            return Convert.ToInt32(len, 2);
+            var msg = value.Substring(8);
+            return (Convert.ToInt32(len, 2), msg);
         }
         else if (Convert.ToInt32(value.Substring(1, 7), 2) != 0) // EOC type file
         {
             var octetCount = Convert.ToInt32(value.Substring(1, 7), 2);
             var longLen = value.Substring(8, 8 * octetCount);
-            return Convert.ToInt64(longLen, 2);
+            var msg = value.Substring(8 * (octetCount + 1));
+            return (Convert.ToInt64(longLen, 2), msg);
         }
 
-        return -1;
+        return (-1, "01010101");
     }
-    public (IType,long) decodeType(string value)
+    public (IType,long,string) decodeType(string value)
     {
         var type = value.Substring(0, 8);
         var type_num = Convert.ToInt32(type, 2);
@@ -185,7 +187,7 @@ public class ASPFile
             var type_toRet = basicTypes[type_num];
             var restOfTheString = value.Remove(0, 8);
             var len = getLen(restOfTheString);
-            return (type_toRet, len);
+            return (type_toRet, len.Item1,len.Item2);
         }
         else
         {
@@ -198,21 +200,21 @@ public class ASPFile
                     var type_toRet = applicationTypes[type_num];
                     var restOfTheString = value.Remove(0, 8);
                     var len = getLen(restOfTheString);
-                    return (type_toRet, len);
+                    return (type_toRet, len.Item1,len.Item2);
                 }
                 if (cla55 == "10")
                 {
                     var type_toRet = contextSpecificTypes[type_num];
                     var restOfTheString = value.Remove(0, 8);
                     var len = getLen(restOfTheString);
-                    return (type_toRet, len);
+                    return (type_toRet, len.Item1,len.Item2);
                 }
                 if (cla55 == "11")
                 {
                     var type_toRet = privateTypes[type_num];
                     var restOfTheString = value.Remove(0, 8);
                     var len = getLen(restOfTheString);
-                    return (type_toRet, len);
+                    return (type_toRet, len.Item1,len.Item2);
                 }
             }
             else
@@ -231,24 +233,24 @@ public class ASPFile
                     var type_toRet = applicationTypes[Convert.ToInt64(longType, 2)];
                     restOfTheString = value.Remove(0, 8);
                     var len = getLen(restOfTheString);
-                    return (type_toRet, len);
+                    return (type_toRet, len.Item1,len.Item2);
                 }
                 if (cla55 == "10")
                 {
                     var type_toRet = contextSpecificTypes[Convert.ToInt64(longType, 2)];
                     restOfTheString = value.Remove(0, 8);
                     var len = getLen(restOfTheString);
-                    return (type_toRet, len);
+                    return (type_toRet, len.Item1,len.Item2);
                 }
                 if (cla55 == "11")
                 {
                     var type_toRet = privateTypes[Convert.ToInt64(longType, 2)];
                     restOfTheString = value.Remove(0, 8);
                     var len = getLen(restOfTheString);
-                    return (type_toRet, len);
+                    return (type_toRet, len.Item1,len.Item2);
                 }
             }            
          }        
-        return (null,0);
+        return (null,0,"OOOOPS");
     }
 }
