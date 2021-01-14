@@ -93,18 +93,13 @@ public class Parser
         IType baseType = file.fetchType(match.Groups["type"].Value);
         string[] addr = match.Groups["INBO"].Value.Split(" ");
         var cons = parseConstraint(match.Groups["range"].Value);
-        if (cons == null) file.AddType(match.Groups["name"].Value, 
-            baseType.derive(Int64.MinValue, Int64.MaxValue, 
+        IType newType = baseType.derive(
+                    cons != null ? cons.Item1 : Int64.MinValue, 
+                    cons != null ? cons.Item1 : Int64.MaxValue,
                     addr.Length == 2 ? addr[0] : null,
                     addr.Length == 2 ? addr[1] : null,
-                    match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null)
-            );
-        else file.AddType(match.Groups["name"].Value, baseType.derive(
-            cons.Item1,
-            cons.Item2, 
-            addr.Length == 2 ? addr[0] : null, 
-            addr.Length == 2 ? addr[1] : null, 
-            match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null));
+                    match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null);
+        file.AddType(match.Groups["name"].Value, newType);
     }
 
     private void parseImport(Match match)
@@ -120,7 +115,10 @@ public class Parser
                 {
                     ITreeNode node = importFile.findNode(import.Trim());
                     if (node != null) file.mergeTree(node);
-                    if (importFile.tryFetchType(import.Trim(), out IType type)) file.AddType(import.Trim(), type);
+                    if (importFile.tryFetchType(import.Trim(), out IType type))
+                    {
+                        file.AddType(import.Trim(), type);
+                    }
                 }
             }
             else Console.WriteLine("file " + fileName + " not found");

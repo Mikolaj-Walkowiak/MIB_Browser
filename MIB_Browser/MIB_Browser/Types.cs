@@ -10,6 +10,9 @@ public interface IType
     string decode(string value);
     IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null);
     string getRange();
+
+    string getClassId();
+    string getAddr();
 }
 
 public class IntegerType : IType
@@ -133,6 +136,16 @@ public class IntegerType : IType
             isExplicit != null ? isExplicit : this.isExplicit
             );
     }
+
+    public string getClassId()
+    {
+        return classId;
+    }
+
+    public string getAddr()
+    {
+        return addr;
+    }
 }
 
 public class EnumIntegerType : IntegerType
@@ -223,6 +236,16 @@ public class BoolType : IType
     public string getRange()
     {
         throw new NotImplementedException();
+    }
+
+    public string getClassId()
+    {
+        return classId;
+    }
+
+    public string getAddr()
+    {
+        return addr;
     }
 }
 
@@ -347,6 +370,16 @@ public class StringType : IType
             addr != null ? addr : this.addr,
             isExplicit != null ? isExplicit : this.isExplicit
             );
+    }
+
+    public string getClassId()
+    {
+        return classId;
+    }
+
+    public string getAddr()
+    {
+        return addr;
     }
 }
 
@@ -477,6 +510,16 @@ public class OIDType : IType
             return encodedMsg;
         }
     }
+
+    public string getClassId()
+    {
+        return classId;
+    }
+
+    public string getAddr()
+    {
+        return addr;
+    }
 }
 
 public class NullType : IType
@@ -527,6 +570,16 @@ public class NullType : IType
         }
         string binAddr = addr != null ? Utils.LocationHelper(addr) : "00101";
         return encodedMsg + binAddr + "00000000";
+    }
+
+    public string getClassId()
+    {
+        return classId;
+    }
+
+    public string getAddr()
+    {
+        return addr;
     }
 }
 
@@ -580,6 +633,16 @@ public class SequenceType : IType
         string children = string.Join("", encoded);
         return "00110000" + Utils.SizeHelper(children.Length / 8) + children;
     }
+
+    public string getClassId()
+    {
+        return null;
+    }
+
+    public string getAddr()
+    {
+        return null;
+    }
 }
 
 public class SequenceOfType : IType
@@ -625,6 +688,16 @@ public class SequenceOfType : IType
         string children = string.Join("", encoded);
         return "00110000" + Utils.SizeHelper(children.Length / 8) + children;
     }
+
+    public string getClassId()
+    {
+        return null;
+    }
+
+    public string getAddr()
+    {
+        return null;
+    }
 }
 
 public class ChoiceType : IType
@@ -661,5 +734,15 @@ public class ChoiceType : IType
         string choiceName = spl[0].Trim();
         string choiceValue = string.Join(' ', spl.AsSpan(1, spl.Length - 1).ToArray());
         return members[choiceName].encode(choiceValue);
+    }
+
+    public string getClassId()
+    {
+        return null;
+    }
+
+    public string getAddr()
+    {
+        return null;
     }
 }

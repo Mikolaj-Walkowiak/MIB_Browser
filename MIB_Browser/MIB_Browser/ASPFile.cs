@@ -46,8 +46,26 @@ public class ASPFile
         ["BOOLEAN"] = new BoolType(null, null, null)
     };
 
+    public Dictionary<long, IType> basicTypes;
+    public void initBasicTypes()
+    {
+        basicTypes = new Dictionary<long, IType>
+        {
+            [1] = types["BOOLEAN"],
+            [2] = types["INTEGER"],
+            [4] = types["OCTET STRING"],
+            [5] = types["NULL"],
+            [6] = types["OBJECT IDENTIFIER"],
+        };
+    }
+
+    public Dictionary<long, IType> applicationTypes = new Dictionary<long, IType>();
+    public Dictionary<long, IType> privateTypes = new Dictionary<long, IType>();
+    public Dictionary<long, IType> contextSpecificTypes = new Dictionary<long, IType>();
+
     public ASPFile(string file)
     {
+        initBasicTypes();
         setParents(root);
         new Parser(this).parse(Utils.preprocessText(file));
     }
@@ -63,6 +81,12 @@ public class ASPFile
 
     public void AddType(string name, IType baseType)
     {
+        if(baseType.getAddr() != null)
+        {
+            if (baseType.getClassId() == "APPLICATION") applicationTypes.Add(Int64.Parse(baseType.getAddr()), baseType);
+            else if (baseType.getClassId() == "PRIVATE") privateTypes.Add(Int64.Parse(baseType.getAddr()), baseType);
+            else contextSpecificTypes.Add(Int64.Parse(baseType.getAddr()), baseType);
+        }
         types.Add(name, baseType);
     }
 
