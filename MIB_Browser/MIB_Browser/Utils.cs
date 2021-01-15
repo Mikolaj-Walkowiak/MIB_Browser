@@ -182,23 +182,15 @@ public static class Utils
         }
         else
         {
-            Boolean notProudOfThis = false;
             toRet = "11111";
             string bigBoy = Convert.ToString(addr, 2);
-            string encoded = "";
-            for (int i = 1; i < bigBoy.Length + 1; ++i)
+            bigBoy = new string('0', (7 - bigBoy.Length % 7) % 7) + bigBoy;
+            while(bigBoy.Length > 7)
             {
-                encoded = bigBoy[bigBoy.Length - i] + encoded;
-                if (i % 7 == 0)
-                {
-                    if (notProudOfThis) { encoded = "0" + encoded; }
-                    else { encoded = "1" + encoded; }
-                }
+                toRet += "1" + bigBoy.Substring(0, 7);
+                bigBoy = bigBoy.Substring(7);
             }
-            while ((encoded.Length + 1) % 8 != 0) { encoded = "0" + encoded; }
-            if (!notProudOfThis) { encoded = "0" + encoded; }
-            else { encoded = "1" + encoded; }
-            toRet = toRet + encoded;
+            return toRet + "0" + bigBoy;
         }
 
 

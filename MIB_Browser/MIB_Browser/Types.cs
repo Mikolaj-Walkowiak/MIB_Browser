@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Text.RegularExpressions;
 
 public interface IType
 {
     bool check(string value);
     string encode(string value);
-    string decode(string value);
+    string decode(ASPFile context, string value);
     IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null);
     string getRange();
-
     string getClassId();
     string getAddr();
 }
@@ -36,9 +37,18 @@ public class IntegerType : IType
     {
         return Int64.Parse(value) >= min && Int64.Parse(value) <= max;
     }
-    public virtual string decode(string value)
+    public virtual string decode(ASPFile context, string value)
     {
-        throw new NotImplementedException();
+        if(isExplicit == "EXPLICIT")
+        {
+            var info = context.decodeType(value);
+            return "(" + classId + " " + addr + "):" + info.Item1.decode(context, info.Item3);
+        }
+        else
+        {
+            var hex = string.Join("",Enumerable.Range(0, value.Length / 8).Select(i => Convert.ToByte(value.Substring(i * 8, 8), 2).ToString("X2")));
+            return BigInteger.Parse(hex, NumberStyles.AllowHexSpecifier).ToString();
+        }
     }
 
     public virtual string encode(string value)
@@ -164,7 +174,7 @@ public class EnumIntegerType : IntegerType
         if (Int32.TryParse(value, out int num)) return enumDict.ContainsValue(num);
         else return enumDict.ContainsKey(value);
     }
-    public override string decode(string value)
+    public override string decode(ASPFile context, string value)
     {
         throw new NotImplementedException();
     }
@@ -198,9 +208,17 @@ public class BoolType : IType
     {
         return new string[] { "TRUE", "FALSE" }.Contains(value);
     }
-    public string decode(string value)
+    public string decode(ASPFile context, string value)
     {
-        throw new NotImplementedException();
+        if (isExplicit == "EXPLICIT")
+        {
+            var info = context.decodeType(value);
+            return "(" + classId + " " + addr + "):" + info.Item1.decode(context, info.Item3);
+        }
+        else
+        {
+            return value == "11111111" ? "TRUE" : "FALSE";
+        }
     }
 
     public string encode(string value)
@@ -270,9 +288,23 @@ public class StringType : IType
     {
         return value.Length >= min && value.Length <= max;
     }
-    public string decode(string value)
+    public string decode(ASPFile context, string value)
     {
-        throw new NotImplementedException();
+        if (isExplicit == "EXPLICIT")
+        {
+            var info = context.decodeType(value);
+            return "(" + classId + " " + addr + "):" + info.Item1.decode(context, info.Item3);
+        }
+        else
+        {
+            string str = "";
+            while(value.Length > 0)
+            {
+                str += (char)Convert.ToInt32(value.Substring(0, 8), 2);
+                value = value.Substring(8);
+            }
+            return "\"" + str + "\"";
+        }
     }
 
     public string encode(string value)
@@ -413,9 +445,26 @@ public class OIDType : IType
         return numbers.Length >= min && numbers.Length <= max;
     }
 
-    public string decode(string value)
+    public string decode(ASPFile context, string value)
     {
-        throw new NotImplementedException();
+        if (isExplicit == "EXPLICIT")
+        {
+            var info = context.decodeType(value);
+            return "(" + classId + " " + addr + "):" + info.Item1.decode(context, info.Item3);
+        }
+        else
+        {
+            var oid = Convert.ToInt32(value.Substring(0, 8), 2);
+            value = value.Substring(8);
+            string str = (oid/40).ToString() + "." + (oid%40).ToString();
+            while(value.Length > 0)
+            {
+                oid = Convert.ToInt32(value.Substring(0, 8), 2);
+                value = value.Substring(8);
+                str += "." + oid.ToString();
+            }
+            return str;
+        }
     }
 
     public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
@@ -539,9 +588,9 @@ public class NullType : IType
         return true;
     }
 
-    public string decode(string value)
+    public string decode(ASPFile context, string value)
     {
-        throw new NotImplementedException();
+        return "NULL";
     }
 
     public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
@@ -605,9 +654,16 @@ public class SequenceType : IType
         return true;
     }
 
-    public string decode(string value)
+    public string decode(ASPFile context, string value)
     {
-        throw new NotImplementedException();
+        string ret = "{ ";
+        while(value.Length > 0)
+        {
+            var info = context.decodeType(value);
+            ret += info.Item1.decode(context, info.Item3.Substring(0, (int)info.Item2*8)) + ", ";
+            value = info.Item3.Substring((int)info.Item2*8);
+        }
+        return ret.Substring(0, ret.Length-2) + " }";
     }
 
     public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
@@ -660,7 +716,7 @@ public class SequenceOfType : IType
         return true;
     }
 
-    public string decode(string value)
+    public string decode(ASPFile context, string value)
     {
         throw new NotImplementedException();
     }
@@ -717,7 +773,7 @@ public class ChoiceType : IType
         return members.ContainsKey(choiceName);
     }
 
-    public string decode(string value)
+    public string decode(ASPFile context, string value)
     {
         throw new NotImplementedException();
     }

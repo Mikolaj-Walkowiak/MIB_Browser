@@ -43,7 +43,8 @@ public class ASPFile
         ["OCTET STRING"] = new StringType(0, Int64.MaxValue, null, null, null),
         ["OBJECT IDENTIFIER"] = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null),
         ["NULL"] = new NullType(null, null),
-        ["BOOLEAN"] = new BoolType(null, null, null)
+        ["BOOLEAN"] = new BoolType(null, null, null),
+        ["SEQUENCE"] = new SequenceType(null)
     };
 
     public Dictionary<long, IType> basicTypes;
@@ -56,6 +57,7 @@ public class ASPFile
             [4] = types["OCTET STRING"],
             [5] = types["NULL"],
             [6] = types["OBJECT IDENTIFIER"],
+            [16] = types["SEQUENCE"]
         };
     }
 
@@ -162,95 +164,69 @@ public class ASPFile
     }
     (long,string) getLen(string value)
     {
-        if(value[0] == '0')
+        if(value.Substring(0, 8) == "10000000")
         {
-            var len = value.Substring(1, 7);
-            var msg = value.Substring(8);
-            return (Convert.ToInt32(len, 2), msg);
-        }
-        else if (Convert.ToInt32(value.Substring(1, 7), 2) != 0) // EOC type file
-        {
-            var octetCount = Convert.ToInt32(value.Substring(1, 7), 2);
-            var longLen = value.Substring(8, 8 * octetCount);
-            var msg = value.Substring(8 * (octetCount + 1));
-            return (Convert.ToInt64(longLen, 2), msg);
-        }
-
-        return (-1, "01010101");
-    }
-    public (IType,long,string) decodeType(string value)
-    {
-        var type = value.Substring(0, 8);
-        var type_num = Convert.ToInt32(type, 2);
-        if(type_num < 31)
-        {
-            var type_toRet = basicTypes[type_num];
-            var restOfTheString = value.Remove(0, 8);
-            var len = getLen(restOfTheString);
-            return (type_toRet, len.Item1,len.Item2);
+            var restOfTheString = value.Substring(8);
+            restOfTheString = restOfTheString.Substring(0, restOfTheString.IndexOf("0000000000000000"));
+            return (restOfTheString.Length, restOfTheString);
         }
         else
         {
-            var tagID = value.Substring(4, 5);
-            var cla55 = value.Substring(0, 2);
-            if (tagID != "11111")
+            var len = "";
+            var restOfTheString = value;
+            while (restOfTheString[0] != '0')
             {
-                if (cla55 == "01")
-                {
-                    var type_toRet = applicationTypes[type_num];
-                    var restOfTheString = value.Remove(0, 8);
-                    var len = getLen(restOfTheString);
-                    return (type_toRet, len.Item1,len.Item2);
-                }
-                if (cla55 == "10")
-                {
-                    var type_toRet = contextSpecificTypes[type_num];
-                    var restOfTheString = value.Remove(0, 8);
-                    var len = getLen(restOfTheString);
-                    return (type_toRet, len.Item1,len.Item2);
-                }
-                if (cla55 == "11")
-                {
-                    var type_toRet = privateTypes[type_num];
-                    var restOfTheString = value.Remove(0, 8);
-                    var len = getLen(restOfTheString);
-                    return (type_toRet, len.Item1,len.Item2);
-                }
+                len += restOfTheString.Substring(1, 7);
+                restOfTheString = restOfTheString.Substring(8);
+            }
+            len += restOfTheString.Substring(1, 7);
+            restOfTheString = restOfTheString.Substring(8);
+
+            return (Convert.ToInt64(len, 2), restOfTheString);
+        }
+    }
+    public (IType, long, string) decodeType(string value)
+    {
+        var type = value.Substring(3, 5);
+        var type_num = Convert.ToInt64(type, 2);
+        var cla55 = value.Substring(0, 2);
+        var restOfTheString = value.Substring(8);
+        if (cla55 == "00")
+        {
+            var len = getLen(restOfTheString);
+            var type_toRet = basicTypes[type_num];
+            return (type_toRet, len.Item1, len.Item2);
+        }
+        else
+        {
+            if (type != "11111")
+            {
+                var len = getLen(restOfTheString);
+                IType retType;
+                if (cla55 == "01") retType = applicationTypes[type_num];
+                else if (cla55 == "10") retType = contextSpecificTypes[type_num];
+                else retType = privateTypes[type_num];
+                return (retType, len.Item1, len.Item2);
             }
             else
             {
-                var restOfTheString = value.Remove(0, 8);
                 var longType = "";
                 while (restOfTheString[0] != '0')
                 {
                     longType = longType + restOfTheString.Substring(1, 7);
-                    restOfTheString = restOfTheString.Remove(0, 8);
+                    restOfTheString = restOfTheString.Substring(8);
                 }
                 longType = longType + restOfTheString.Substring(1, 7);
+                restOfTheString = restOfTheString.Substring(8);
+                type_num = Convert.ToInt64(longType, 2);
 
-                if (cla55 == "01")
-                {
-                    var type_toRet = applicationTypes[Convert.ToInt64(longType, 2)];
-                    restOfTheString = value.Remove(0, 8);
-                    var len = getLen(restOfTheString);
-                    return (type_toRet, len.Item1,len.Item2);
-                }
-                if (cla55 == "10")
-                {
-                    var type_toRet = contextSpecificTypes[Convert.ToInt64(longType, 2)];
-                    restOfTheString = value.Remove(0, 8);
-                    var len = getLen(restOfTheString);
-                    return (type_toRet, len.Item1,len.Item2);
-                }
-                if (cla55 == "11")
-                {
-                    var type_toRet = privateTypes[Convert.ToInt64(longType, 2)];
-                    restOfTheString = value.Remove(0, 8);
-                    var len = getLen(restOfTheString);
-                    return (type_toRet, len.Item1,len.Item2);
-                }
+                var len = getLen(restOfTheString);
+                IType retType;
+                if (cla55 == "01") retType = applicationTypes[type_num];
+                else if (cla55 == "10") retType = contextSpecificTypes[type_num];
+                else retType = privateTypes[type_num];
+                return (retType, len.Item1, len.Item2);
             }            
-         }        
-        return (null,0,"OOOOPS");
+        }        
     }
 }

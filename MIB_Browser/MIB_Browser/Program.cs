@@ -27,20 +27,12 @@ namespace MIB_Browser
                     file = new ASPFile(File.ReadAllText("RFC1213-MIB.txt"));
                     node = file.root;
                 }
-                else if (command[0] == "test" && command.Length == 1)
+                else if (command[0] == "decode" && command.Length > 1)
                 {
-                    var str = new IntegerType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("5");
-
-                    //string hex = String.Concat(
-                    //  Regex.Matches(str, "....").Cast<Match>()
-                    //  .Select(m => Convert.ToInt32(m.Value, 2)
-                    //  .ToString("x1"))
-                    //);
-                    //Console.WriteLine(str);
-                    //Console.WriteLine(hex);
-                    var test = file.decodeType(str);
-                    //var test = file.decodeType("0000001000000010000010000101100100000101");
-                    Console.WriteLine(test);
+                    var toDecode = Regex.Replace(string.Join(' ', command.AsSpan(1, command.Length - 1).ToArray()), @"\s+", "");
+                    toDecode = String.Join(String.Empty, toDecode.Select(c => Convert.ToString(Convert.ToInt32(c.ToString(), 16), 2).PadLeft(4, '0')));
+                    var info = file.decodeType(toDecode);
+                    Console.WriteLine(info.Item1.decode(file, info.Item3));
                 }
                 else if (command[0] == "cls" && command.Length == 1)
                 {
