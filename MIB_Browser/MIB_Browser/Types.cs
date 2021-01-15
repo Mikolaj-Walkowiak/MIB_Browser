@@ -369,10 +369,9 @@ public class StringType : IType
                 if (value != null)
                 {
                     string exp = Utils.EncodeHelper(4, value);
+                    exp = "00000100" + exp;
                     long length = exp.Length / 8;
                     string binaryLen = Utils.SizeHelper(length);
-                    exp = binaryLen + exp;
-                    length = exp.Length / 8;
                     binaryLen = Utils.SizeHelper(length);
                     encodedMsg = encodedMsg + binaryLen + exp;
                 }
