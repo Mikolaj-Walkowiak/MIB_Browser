@@ -46,10 +46,21 @@ public static class Utils
         }
         else
         {
-            toRet = "0";
+            toRet = "";
             string bigBoy = Convert.ToString(len, 2);
             string encoded = "";
-            for (int i = 1; i < bigBoy.Length + 1; ++i)
+            int i = 1;
+            for (; i < bigBoy.Length + 1; ++i)
+            {
+                encoded = bigBoy[bigBoy.Length - i] + encoded;
+                if (i % 7 == 0)
+                {
+                    encoded = "0" + encoded;
+                    break;
+                }
+            }
+            i += 1;
+            for (; i < bigBoy.Length + 1; ++i)
             {
                 encoded = bigBoy[bigBoy.Length - i] + encoded;
                 if (i % 7 == 0)
@@ -58,8 +69,8 @@ public static class Utils
                 }
             }
             while ((encoded.Length + 1) % 8 != 0) { encoded = "0" + encoded; }
-            encoded = "0" + encoded;
-            toRet = toRet + encoded;
+            encoded = "1" + encoded;
+            toRet = encoded;
         }
 
         return toRet;
@@ -145,7 +156,6 @@ public static class Utils
                 encodedMsg = encodedMsg + OIDHelper(i);
                 for (int j = 2; j < numbers.Length; ++j)
                 {
-                    encodedMsg = encodedMsg + "0";
                     encodedMsg = encodedMsg + OIDHelper(Convert.ToInt64(numbers[j]));
                 }
             }

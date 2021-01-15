@@ -168,7 +168,7 @@ public class ASPFile
         {
             var restOfTheString = value.Substring(8);
             restOfTheString = restOfTheString.Substring(0, restOfTheString.IndexOf("0000000000000000"));
-            return (restOfTheString.Length, restOfTheString);
+            return (restOfTheString.Length/8, restOfTheString);
         }
         else
         {

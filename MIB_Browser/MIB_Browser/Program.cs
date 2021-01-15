@@ -21,6 +21,22 @@ namespace MIB_Browser
                 {
                     quit = true;
                 }
+                else if (command[0] == "test" && command.Length == 1)
+                {
+                    var str = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("{ISO(1) org(3) dod(6) internet(257)}");
+
+
+                    string hex = String.Concat(
+                      Regex.Matches(str, "....").Cast<Match>()
+                      .Select(m => Convert.ToInt32(m.Value, 2)
+                      .ToString("x1"))
+                    );
+                    Console.WriteLine(str);
+                    Console.WriteLine(hex);
+
+                    var test = file.decodeType(str);
+                    Console.WriteLine(test);
+                }
                 else if (command[0] == "start" && command.Length == 1)
                 {
                     Console.WriteLine("parsing file RFC1213 - MIB.txt");
