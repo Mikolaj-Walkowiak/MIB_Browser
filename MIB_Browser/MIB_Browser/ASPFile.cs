@@ -39,12 +39,12 @@ public class ASPFile
 
     public Dictionary<String, IType> types = new Dictionary<String, IType>
     {
-        ["INTEGER"] = new IntegerType(Int64.MinValue, Int64.MaxValue, null, null, null),
-        ["OCTET STRING"] = new StringType(0, Int64.MaxValue, null, null, null),
-        ["OBJECT IDENTIFIER"] = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null),
-        ["NULL"] = new NullType(null, null),
-        ["BOOLEAN"] = new BoolType(null, null, null),
-        ["SEQUENCE"] = new SequenceType(null)
+        ["INTEGER"] = new IntegerType("INTEGER", Int64.MinValue, Int64.MaxValue, null, null, null),
+        ["OCTET STRING"] = new StringType("OCTET STRING", 0, Int64.MaxValue, null, null, null),
+        ["OBJECT IDENTIFIER"] = new OIDType("OBJECT IDENTIFIER", Int64.MinValue, Int64.MaxValue, null, null, null),
+        ["NULL"] = new NullType("NULL", null, null, null),
+        ["BOOLEAN"] = new BoolType("BOOLEAN", null, null, null),
+        ["SEQUENCE"] = new SequenceType("SEQUENCE", null, null, null, null)
     };
 
     public Dictionary<long, IType> basicTypes;
@@ -81,15 +81,15 @@ public class ASPFile
         }
     }
 
-    public void AddType(string name, IType baseType)
+    public void AddType(IType baseType)
     {
-        if(baseType.getAddr() != null)
+        if(baseType.addr != null)
         {
-            if (baseType.getClassId() == "APPLICATION") applicationTypes.Add(Int64.Parse(baseType.getAddr()), baseType);
-            else if (baseType.getClassId() == "PRIVATE") privateTypes.Add(Int64.Parse(baseType.getAddr()), baseType);
-            else contextSpecificTypes.Add(Int64.Parse(baseType.getAddr()), baseType);
+            if (baseType.classId == "APPLICATION") applicationTypes.Add(Int64.Parse(baseType.addr), baseType);
+            else if (baseType.classId == "PRIVATE") privateTypes.Add(Int64.Parse(baseType.addr), baseType);
+            else contextSpecificTypes.Add(Int64.Parse(baseType.addr), baseType);
         }
-        types.Add(name, baseType);
+        types.Add(baseType.name, baseType);
     }
 
     public bool tryFetchType(string value, out IType type)

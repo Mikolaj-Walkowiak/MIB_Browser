@@ -19,6 +19,7 @@ public class Parser
             new Tuple<Regex, Action<Match>>(Expressions.Macro.tag, new Action<Match>((Match match) => { })),
             new Tuple<Regex, Action<Match>>(Expressions.Imports.tag, new Action<Match>(parseImport)),
             new Tuple<Regex, Action<Match>>(Expressions.Types.choiceType, new Action<Match>(parseChoiceType)),
+            new Tuple<Regex, Action<Match>>(Expressions.Types.sequenceOfType, new Action<Match>(parseSequenceOfType)),
             new Tuple<Regex, Action<Match>>(Expressions.Types.sequenceType, new Action<Match>(parseSequenceType)),
             new Tuple<Regex, Action<Match>>(Expressions.Types.standardType, new Action<Match>(parseStandardType)),
 
@@ -68,10 +69,10 @@ public class Parser
             Match syntaxMatch = Expressions.Types.syntax.Match(el.Trim());
             var cons = parseConstraint(syntaxMatch.Groups["cons"].Value);
             IType baseType = file.fetchType(syntaxMatch.Groups["type"].Value);
-            if (cons != null) members.Add(syntaxMatch.Groups["name"].Value, baseType.derive(cons.Item1, cons.Item2));
+            if (cons != null) members.Add(syntaxMatch.Groups["name"].Value, baseType.derive(syntaxMatch.Groups["name"].Value, cons.Item1, cons.Item2));
             else members.Add(syntaxMatch.Groups["name"].Value, baseType);
         }
-        file.AddType(match.Groups["name"].Value, new ChoiceType(members));
+        file.AddType(new ChoiceType(match.Groups["name"].Value, members));
     }
 
     private void parseSequenceType(Match match)
@@ -82,10 +83,16 @@ public class Parser
             Match syntaxMatch = Expressions.Types.syntax.Match(el.Trim());
             var cons = parseConstraint(syntaxMatch.Groups["cons"].Value);
             IType baseType = file.fetchType(syntaxMatch.Groups["type"].Value);
-            if (cons != null) members.Add(syntaxMatch.Groups["name"].Value, baseType.derive(cons.Item1, cons.Item2));
-            else members.Add(syntaxMatch.Groups["name"].Value, baseType);
+            if (cons != null) members.Add(syntaxMatch.Groups["name"].Value, baseType.derive(syntaxMatch.Groups["name"].Value, cons.Item1, cons.Item2, baseType.classId, baseType.addr, baseType.isExplicit));
+            else members.Add(syntaxMatch.Groups["name"].Value, baseType.derive(syntaxMatch.Groups["name"].Value, baseType.min, baseType.max, baseType.classId, baseType.addr, baseType.isExplicit));
         }
-        file.AddType(match.Groups["name"].Value, new SequenceType(members));
+        string[] addr = match.Groups["INBO"].Value.Split(" ");
+        file.AddType(new SequenceType(match.Groups["name"].Value,
+            members, 
+            addr.Length == 2 ? addr[0] : null, 
+            addr.Length == 2 ? addr[1] : null, 
+            match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null)
+        );
     }
 
     private void parseStandardType(Match match)
@@ -94,12 +101,13 @@ public class Parser
         string[] addr = match.Groups["INBO"].Value.Split(" ");
         var cons = parseConstraint(match.Groups["range"].Value);
         IType newType = baseType.derive(
+                    match.Groups["name"].Value,
                     cons != null ? cons.Item1 : Int64.MinValue, 
                     cons != null ? cons.Item1 : Int64.MaxValue,
                     addr.Length == 2 ? addr[0] : null,
                     addr.Length == 2 ? addr[1] : null,
                     match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null);
-        file.AddType(match.Groups["name"].Value, newType);
+        file.AddType(newType);
     }
 
     private void parseImport(Match match)
@@ -117,7 +125,7 @@ public class Parser
                     if (node != null) file.mergeTree(node);
                     if (importFile.tryFetchType(import.Trim(), out IType type))
                     {
-                        file.AddType(import.Trim(), type);
+                        file.AddType(type);
                     }
                 }
             }
@@ -151,7 +159,7 @@ public class Parser
                 string entry = spl.Trim();
                 enumDict.Add(entry.Substring(0, entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(") + 1, entry.IndexOf(")") - entry.IndexOf("(") - 1)));
             }
-            return new EnumIntegerType(enumDict);
+            return new EnumIntegerType(null, enumDict);
         }
 
         syntaxMatch = Expressions.ObjectType.Syntaxes.withConstraint.Match(syntax);
@@ -159,13 +167,13 @@ public class Parser
         {
             IType baseType = file.fetchType(syntaxMatch.Groups["type"].Value);
             var cons = parseConstraint(syntaxMatch.Groups["cons"].Value);
-            return baseType.derive(cons.Item1, cons.Item2);
+            return baseType.derive(baseType.name, cons.Item1, cons.Item2);
         }
 
         syntaxMatch = Expressions.ObjectType.Syntaxes.sequenceOf.Match(syntax);
         if (syntaxMatch.Success)
         {
-            return new SequenceOfType(file.fetchType(syntaxMatch.Groups[1].Value));
+            return new SequenceOfType(null, file.fetchType(syntaxMatch.Groups[1].Value));
         }
 
         return file.fetchType(syntax);
@@ -207,8 +215,9 @@ public class Parser
             string entry = spl.Trim();
             enumDict.Add(entry.Substring(0, entry.IndexOf("(")), Int64.Parse(entry.Substring(entry.IndexOf("(") + 1, entry.IndexOf(")") - entry.IndexOf("(") - 1)));
         }
-        file.AddType(match.Groups["name"].Value, 
-            new EnumIntegerType(enumDict, 
+        file.AddType(
+            new EnumIntegerType(match.Groups["name"].Value, 
+                enumDict, 
                 addr.Length == 2 ? addr[0] : null,
                 addr.Length == 2 ? addr[1] : null,
                 match.Groups["ie"].Value.Length > 0 ? match.Groups["ie"].Value : null)
@@ -219,8 +228,8 @@ public class Parser
     {
         var cons = parseConstraint(match.Groups["cons"].Value);
         IType baseType = file.fetchType(match.Groups["type"].Value);
-        if (cons != null) file.AddType(match.Groups["name"].Value, new SequenceOfType(baseType.derive(cons.Item1, cons.Item2)));
-        else file.AddType(match.Groups["name"].Value, new SequenceOfType(file.fetchType(match.Groups["type"].Value)));
+        if (cons != null) file.AddType(new SequenceOfType(match.Groups["name"].Value, baseType.derive(baseType.name, cons.Item1, cons.Item2)));
+        else file.AddType(new SequenceOfType(match.Groups["name"].Value, file.fetchType(match.Groups["type"].Value)));
     }
 
     public void parseAnyType(string line)

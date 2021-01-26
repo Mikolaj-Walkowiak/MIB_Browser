@@ -5,39 +5,39 @@ using System.Linq;
 using System.Numerics;
 using System.Text.RegularExpressions;
 
-public interface IType
+public abstract class IType
 {
-    bool check(string value);
-    string encode(string value);
-    string decode(ASPFile context, string value);
-    IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null);
-    string getRange();
-    string getClassId();
-    string getAddr();
+    public string name { get; set; }
+    public string classId { get; set; }
+    public string addr { get; set; }
+    public string isExplicit { get; set; }
+    public long min { get; set; } = Int64.MinValue;
+    public long max { get; set; } = Int64.MaxValue;
+    public abstract bool check(string value);
+    public abstract string encode(string value);
+    public abstract string decode(ASPFile context, string value);
+    public abstract IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null);
+    public abstract string getRange();
 }
 
 public class IntegerType : IType
 {
-    public long min { get; } = Int64.MinValue;
-    public long max { get; } = Int64.MaxValue;
-    public string classId;
-    public string addr;
-    public string isExplicit;
 
-    public string getRange() { return min + ", " + max; }
-    public IntegerType(long min, long max, string classId, string addr, string isExplicit)
+    public override string getRange() { return min + ", " + max; }
+    public IntegerType(string name, long min, long max, string classId, string addr, string isExplicit)
     {
+        this.name = name;
         this.min = min;
         this.max = max;
         this.classId = classId;
         this.addr = addr;
         this.isExplicit = isExplicit;
     }
-    public virtual bool check(string value)
+    public override bool check(string value)
     {
         return Int64.Parse(value) >= min && Int64.Parse(value) <= max;
     }
-    public virtual string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
         if(isExplicit == "EXPLICIT")
         {
@@ -47,11 +47,11 @@ public class IntegerType : IType
         else
         {
             var hex = string.Join("",Enumerable.Range(0, value.Length / 8).Select(i => Convert.ToByte(value.Substring(i * 8, 8), 2).ToString("X2")));
-            return BigInteger.Parse(hex, NumberStyles.AllowHexSpecifier).ToString();
+            return name + ": " + BigInteger.Parse(hex, NumberStyles.AllowHexSpecifier).ToString();
         }
     }
 
-    public virtual string encode(string value)
+    public override string encode(string value)
     {
         string encodedMsg = "";
 
@@ -138,33 +138,23 @@ public class IntegerType : IType
         }
     }
 
-    public virtual IType derive(long min, long max, string classId, string addr, string isExplicit)
+    public override IType derive(string name, long min, long max, string classId, string addr, string isExplicit)
     {
-        return new IntegerType(min, max,
+        return new IntegerType(name, min, max,
             classId != null ? classId : this.classId,
             addr != null ? addr : this.addr,
             isExplicit != null ? isExplicit : this.isExplicit
             );
     }
-
-    public string getClassId()
-    {
-        return classId;
-    }
-
-    public string getAddr()
-    {
-        return addr;
-    }
 }
 
 public class EnumIntegerType : IntegerType
 {
-    public EnumIntegerType(Dictionary<string, long> d, string classId, string addr, string isExplicit) : base(Int64.MinValue, Int64.MaxValue, classId, addr, isExplicit)
+    public EnumIntegerType(string name, Dictionary<string, long> d, string classId, string addr, string isExplicit) : base(name, Int64.MinValue, Int64.MaxValue, classId, addr, isExplicit)
     {
         enumDict = d;
     }
-    public EnumIntegerType(Dictionary<string, long> d) : base(Int64.MinValue, Int64.MaxValue, null, null, null)
+    public EnumIntegerType(string name, Dictionary<string, long> d) : base(name, Int64.MinValue, Int64.MaxValue, null, null, null)
     {
         enumDict = d;
     }
@@ -186,7 +176,7 @@ public class EnumIntegerType : IntegerType
         else return base.encode(enumDict[value].ToString());
     }
 
-    public override IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
         throw new NotImplementedException();
     }
@@ -194,21 +184,19 @@ public class EnumIntegerType : IntegerType
 
 public class BoolType : IType
 {
-    public string classId;
-    public string addr;
-    public string isExplicit;
-    public BoolType(string classId, string addr, string isExplicit)
+    public BoolType(string name, string classId, string addr, string isExplicit)
     {
+        this.name = name;
         this.classId = classId;
         this.addr = addr;
         this.isExplicit = isExplicit;
     }
 
-    public bool check(string value)
+    public override bool check(string value)
     {
         return new string[] { "TRUE", "FALSE" }.Contains(value);
     }
-    public string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
         if (isExplicit == "EXPLICIT")
         {
@@ -217,11 +205,11 @@ public class BoolType : IType
         }
         else
         {
-            return value == "11111111" ? "TRUE" : "FALSE";
+            return name + ": " + (value == "11111111" ? "TRUE" : "FALSE");
         }
     }
 
-    public string encode(string value)
+    public override string encode(string value)
     {
         if (!check(value)) { return null; }
         string encodedMsg = "";
@@ -246,49 +234,35 @@ public class BoolType : IType
         return encodedMsg + binAddr + "00000001" + val;
     }
 
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        return new BoolType(classId, addr, isExplicit);
+        return new BoolType(name, classId, addr, isExplicit);
     }
 
-    public string getRange()
+    public override string getRange()
     {
         throw new NotImplementedException();
-    }
-
-    public string getClassId()
-    {
-        return classId;
-    }
-
-    public string getAddr()
-    {
-        return addr;
     }
 }
 
 public class StringType : IType
 {
-    public string getRange() { return min + ", " + max; }
-    public long min { get; } = 0;
-    public long max { get; } = Int64.MaxValue;
-    public string classId;
-    public string addr;
-    public string isExplicit;
+    public override string getRange() { return min + ", " + max; }
 
-    public StringType(long min, long max, string classId, string addr, string isExplicit)
+    public StringType(string name, long min, long max, string classId, string addr, string isExplicit)
     {
+        this.name = name;
         this.min = min;
         this.max = max;
         this.classId = classId;
         this.addr = addr;
         this.isExplicit = isExplicit;
     }
-    public bool check(string value)
+    public override bool check(string value)
     {
         return value.Length >= min && value.Length <= max;
     }
-    public string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
         if (isExplicit == "EXPLICIT")
         {
@@ -303,11 +277,11 @@ public class StringType : IType
                 str += (char)Convert.ToInt32(value.Substring(0, 8), 2);
                 value = value.Substring(8);
             }
-            return "\"" + str + "\"";
+            return name + ": " + "\"" + str + "\"";
         }
     }
 
-    public string encode(string value)
+    public override string encode(string value)
     {
         if (!check(value)) { return null; }
 
@@ -318,7 +292,7 @@ public class StringType : IType
         if (classId == addr && addr == isExplicit && isExplicit == null)
         { //basic types
             int typeIdentyfier = 4;
-            encodedMsg = "00" + "1";
+            encodedMsg = "00" + "0";
             string binary = Convert.ToString(typeIdentyfier, 2).PadLeft(5, '0');
             encodedMsg = encodedMsg + binary;
             if (value != null)
@@ -394,44 +368,30 @@ public class StringType : IType
             return encodedMsg;
         }
     }
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        return new StringType(min, max,
+        return new StringType(name, min, max,
             classId != null ? classId : this.classId,
             addr != null ? addr : this.addr,
             isExplicit != null ? isExplicit : this.isExplicit
             );
     }
-
-    public string getClassId()
-    {
-        return classId;
-    }
-
-    public string getAddr()
-    {
-        return addr;
-    }
 }
 
 public class OIDType : IType
 {
-    public string getRange() { return min + ", " + max; }
-    public long min { get; } = 0;
-    public long max { get; } = Int64.MaxValue;
-    public string classId;
-    public string addr;
-    public string isExplicit;
+    public override string getRange() { return min + ", " + max; }
 
-    public OIDType(long min, long max, string classId, string addr, string isExplicit)
+    public OIDType(string name, long min, long max, string classId, string addr, string isExplicit)
     {
+        this.name = name;
         this.min = min;
         this.max = max;
         this.classId = classId;
         this.addr = addr;
         this.isExplicit = isExplicit;
     }
-    public bool check(string value)
+    public override bool check(string value)
     {
         string[] numbers = Regex.Split(value, @"\D+");
         var temp = new List<string>();
@@ -444,7 +404,7 @@ public class OIDType : IType
         return numbers.Length >= min && numbers.Length <= max;
     }
 
-    public string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
         if (isExplicit == "EXPLICIT")
         {
@@ -458,21 +418,32 @@ public class OIDType : IType
             string str = (oid/40).ToString() + "." + (oid%40).ToString();
             while(value.Length > 0)
             {
-                oid = Convert.ToInt32(value.Substring(0, 8), 2);
+                string v = value.Substring(0, 8);
+                string fullval = v.Substring(1, 7);
+                while(v[0] == '1')
+                {
+                    value = value.Substring(8);
+                    v = value.Substring(0, 8);
+                    fullval += v.Substring(1, 7);
+                }
+                oid = Convert.ToInt32(fullval, 2);
                 value = value.Substring(8);
                 str += "." + oid.ToString();
             }
-            return str;
+            ITreeNode node = context.findPath(str.Split("."), context.root);
+            //if (node != null) return name + ": " + node.getName();
+            //else 
+            return name + ": " + str;
         }
     }
 
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        return new OIDType(min, max, classId, addr, isExplicit);
+        return new OIDType(name, min, max, classId, addr, isExplicit);
     }
 
 
-    public string encode(string value)
+    public override string encode(string value)
     {
         if (!check(value)) { return null; }
 
@@ -558,46 +529,36 @@ public class OIDType : IType
             return encodedMsg;
         }
     }
-
-    public string getClassId()
-    {
-        return classId;
-    }
-
-    public string getAddr()
-    {
-        return addr;
-    }
 }
 
 public class NullType : IType
 {
-    public string classId;
-    public string addr;
 
-    public NullType(string classId, string addr)
+    public NullType(string name, string classId, string addr, string isExplicit)
     {
+        this.name = name;
         this.classId = classId;
         this.addr = addr;
+        this.isExplicit = isExplicit;
     }
 
-    public string getRange() { return "is Null"; }
-    public bool check(string value)
+    public override string getRange() { return "is Null"; }
+    public override bool check(string value)
     {
         return true;
     }
 
-    public string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
-        return "NULL";
+        return name + ": " + "NULL";
     }
 
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        return new NullType(classId, addr);
+        return new NullType(name, classId, addr, isExplicit);
     }
 
-    public string encode(string value)
+    public override string encode(string value)
     {
         string encodedMsg = "";
         if (classId == "APPLICATION")
@@ -619,29 +580,23 @@ public class NullType : IType
         string binAddr = addr != null ? Utils.LocationHelper(addr) : "00101";
         return encodedMsg + binAddr + "00000000";
     }
-
-    public string getClassId()
-    {
-        return classId;
-    }
-
-    public string getAddr()
-    {
-        return addr;
-    }
 }
 
 public class SequenceType : IType
 {
-    public string getRange() { return "is Sequence"; }
+    public override string getRange() { return "is Sequence"; }
     Dictionary<string, IType> members;
 
-    public SequenceType(Dictionary<string, IType> members)
+    public SequenceType(string name, Dictionary<string, IType> members, string classId, string addr, string isExplicit)
     {
+        this.name = name;
         this.members = members;
+        this.classId = classId;
+        this.addr = addr;
+        this.isExplicit = isExplicit;
     }
 
-    public bool check(string value)
+    public override bool check(string value)
     {
         value = value.Substring(1, value.Length - 2);
         List<Tuple<string, string>> elements = new List<Tuple<string, string>>();
@@ -653,7 +608,7 @@ public class SequenceType : IType
         return true;
     }
 
-    public string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
         string ret = "{ ";
         while(value.Length > 0)
@@ -662,15 +617,15 @@ public class SequenceType : IType
             ret += info.Item1.decode(context, info.Item3.Substring(0, (int)info.Item2*8)) + ", ";
             value = info.Item3.Substring((int)info.Item2*8);
         }
-        return ret.Substring(0, ret.Length-2) + " }";
+        return name + ": " + ret.Substring(0, ret.Length-2) + " }";
     }
 
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        throw new NotImplementedException();
+        return new SequenceType(name, members, classId, addr, isExplicit);
     }
 
-    public string encode(string value)
+    public override string encode(string value)
     {
         if (!check(value)) { return null; }
 
@@ -686,46 +641,41 @@ public class SequenceType : IType
             else return null;
         }
         string children = string.Join("", encoded);
-        return "00110000" + Utils.SizeHelper(children.Length / 8) + children;
-    }
-
-    public string getClassId()
-    {
-        return null;
-    }
-
-    public string getAddr()
-    {
-        return null;
+        string pc = "00";
+        if (classId == "CONTEXT-SPECIFIC") pc = "10";
+        else if (classId == "APPLICATION") pc = "01";
+        else if (classId == "PRIVATE") pc = "11";
+        return pc + "1" + (addr != null ? Utils.LocationHelper(addr) : "10000") + Utils.SizeHelper(children.Length / 8) + children;
     }
 }
 
 public class SequenceOfType : IType
 {
-    public string getRange() { return "is Sequence"; }
+    public override string getRange() { return "is Sequence"; }
     IType baseType;
 
-    public SequenceOfType(IType b)
+    public SequenceOfType(string name, IType b)
     {
+        this.name = name;
         baseType = b;
     }
 
-    public bool check(string value)
+    public override bool check(string value)
     {
         return true;
     }
 
-    public string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
         throw new NotImplementedException();
     }
 
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        throw new NotImplementedException();
+        return new SequenceOfType(name, baseType);
     }
 
-    public string encode(string value)
+    public override string encode(string value)
     {
         if (!check(value)) { return null; }
 
@@ -743,61 +693,42 @@ public class SequenceOfType : IType
         string children = string.Join("", encoded);
         return "00110000" + Utils.SizeHelper(children.Length / 8) + children;
     }
-
-    public string getClassId()
-    {
-        return null;
-    }
-
-    public string getAddr()
-    {
-        return null;
-    }
 }
 
 public class ChoiceType : IType
 {
-    public string getRange() { return "is Choice"; }
+    public override string getRange() { return "is Choice"; }
     Dictionary<string, IType> members;
 
-    public ChoiceType(Dictionary<string, IType> members)
+    public ChoiceType(string name, Dictionary<string, IType> members)
     {
+        this.name = name;
         this.members = members;
     }
 
-    public bool check(string value)
+    public override bool check(string value)
     {
         if (value.IndexOf(" ") == -1) return false;
         string choiceName = value.Substring(0, value.IndexOf(" "));
         return members.ContainsKey(choiceName);
     }
 
-    public string decode(ASPFile context, string value)
+    public override string decode(ASPFile context, string value)
     {
         throw new NotImplementedException();
     }
 
-    public IType derive(long min, long max, string classId = null, string addr = null, string isExplicit = null)
+    public override IType derive(string name, long min, long max, string classId = null, string addr = null, string isExplicit = null)
     {
-        throw new NotImplementedException();
+        return new ChoiceType(name, members);
     }
 
-    public string encode(string value)
+    public override string encode(string value)
     {
         if (!check(value)) return null;
         string[] spl = value.Split(" ");
         string choiceName = spl[0].Trim();
         string choiceValue = string.Join(' ', spl.AsSpan(1, spl.Length - 1).ToArray());
         return members[choiceName].encode(choiceValue);
-    }
-
-    public string getClassId()
-    {
-        return null;
-    }
-
-    public string getAddr()
-    {
-        return null;
     }
 }

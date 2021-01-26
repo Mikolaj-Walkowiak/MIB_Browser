@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 using System.Text.RegularExpressions;
 namespace MIB_Browser
 {
@@ -23,8 +26,7 @@ namespace MIB_Browser
                 }
                 else if (command[0] == "test" && command.Length == 1)
                 {
-                    var str = new OIDType(Int64.MinValue, Int64.MaxValue, null, null, null).encode("{ISO(1) org(3) dod(6) internet(257)}");
-
+                    var str = new OIDType(null, Int64.MinValue, Int64.MaxValue, null, null, null).encode("{ISO(1) org(3) dod(6) internet(257)}");
 
                     string hex = String.Concat(
                       Regex.Matches(str, "....").Cast<Match>()
@@ -125,6 +127,32 @@ namespace MIB_Browser
                         else Console.WriteLine("invalid input");
                     }
                     else Console.WriteLine("node not encodable");
+                }
+                else if (command[0] == "listen" && command.Length == 1)
+                {
+                    IPEndPoint serverEndpoint = new IPEndPoint(IPAddress.Any, 161);
+                    UdpClient socket = new UdpClient(serverEndpoint);
+                    IPEndPoint remote = new IPEndPoint(IPAddress.Any, 0);
+                    
+                    var data = socket.Receive(ref remote);
+                    var byteData = string.Join("", Enumerable.Range(0, data.Length).Select(i => data[i].ToString("X2")));
+                    byteData = String.Join(String.Empty, byteData.Select(c => Convert.ToString(Convert.ToInt32(c.ToString(), 16), 2).PadLeft(4, '0')));
+                    var info = file.decodeType(byteData);
+                    var decoded = info.Item1.decode(file, info.Item3);
+                    Console.WriteLine(decoded);
+
+                    var requestId = Regex.Match(decoded, @"GetRequestPDU: { INTEGER: ([0-9]+),").Groups[1];
+                    var oid = Regex.Match(decoded, @"OBJECT IDENTIFIER: ([.0-9]+),").Groups[1];
+                    var resp = file.fetchType("Message").encode("{ version 0, community public, data { requestid " + requestId + ", errorstatus 0, errorindex 0, variablebindings { { name " + oid + ", value str AAAAA } } } }");
+                    resp = string.Join("", Enumerable.Range(0, resp.Length / 8).Select(i => Convert.ToByte(resp.Substring(i * 8, 8), 2).ToString("X2")));
+                    data = new byte[1024];
+                    for (int i = 0; i<resp.Length; i+=2)
+                    {
+                        data[i/2] = Byte.Parse(resp.Substring(i, 2), System.Globalization.NumberStyles.HexNumber);
+                    }
+
+                    socket.Send(data, resp.Length/2, remote);
+
                 }
                 else Console.WriteLine("unknown command");
             }
